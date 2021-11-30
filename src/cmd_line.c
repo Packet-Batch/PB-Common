@@ -23,8 +23,8 @@ static struct option long_opts[] =
     {"threads", required_argument, NULL, 8},
     {"l4csum", required_argument, NULL, 9},
 
-    {"smac", required_argument, NULL, 10},
-    {"dmac", required_argument, NULL, 11},
+    {"srcmac", required_argument, NULL, 10},
+    {"dstmac", required_argument, NULL, 11},
 
     {"minttl", required_argument, NULL, 12},
     {"maxttl", required_argument, NULL, 13},
@@ -36,18 +36,18 @@ static struct option long_opts[] =
     {"tos", required_argument, NULL, 19},
     {"l3csum", required_argument, NULL, 20},
 
-    {"usport", required_argument, NULL, 21},
-    {"udport", required_argument, NULL, 22},
+    {"usrcport", required_argument, NULL, 21},
+    {"udstport", required_argument, NULL, 22},
 
-    {"tsport", required_argument, NULL, 23},
-    {"tdport", required_argument, NULL, 24},
+    {"tsrcport", required_argument, NULL, 23},
+    {"tdstport", required_argument, NULL, 24},
     {"tsyn", required_argument, NULL, 25},
     {"tack", required_argument, NULL, 26},
     {"tpsh", required_argument, NULL, 27},
     {"trst", required_argument, NULL, 28},
     {"tfin", required_argument, NULL, 29},
     {"turg", required_argument, NULL, 30},
-    {"tusecooked", required_argument, NULL, 31},
+    {"tusesocket", required_argument, NULL, 31},
 
     {"icode", required_argument, NULL, 38},
     {"itype", required_argument, NULL, 39},
