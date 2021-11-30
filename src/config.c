@@ -456,7 +456,7 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
                             }
 
                             // TCP cooked Linux socket.
-                            if (prev_key != NULL && !strcmp(prev_key, "usetcpsocket"))
+                            if (prev_key != NULL && !strcmp(prev_key, "usesocket"))
                             {
                                 cfg->seq[*seq_num].tcp.use_socket = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
                             }
