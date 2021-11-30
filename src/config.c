@@ -491,12 +491,6 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
                                 {
                                     cfg->seq[*seq_num].pl.max_len = (__u16) atoi((const char *)ev.data.scalar.value);
                                 }
-
-                                // Check for static pl.
-                                if (prev_key != NULL && !strcmp(prev_key, "isstatic"))
-                                {
-                                    cfg->seq[*seq_num].pl.is_static = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
-                                }
                             }
                             else
                             {
@@ -504,6 +498,12 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
                                 if (prev_key != NULL && !strcmp(prev_key, "exact"))
                                 {
                                     cfg->seq[*seq_num].pl.exact = strdup((const char *)ev.data.scalar.value);
+                                }
+
+                                // Check for static pl.
+                                if (prev_key != NULL && !strcmp(prev_key, "isstatic"))
+                                {
+                                    cfg->seq[*seq_num].pl.is_static = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
                                 }
 
                                 // Check if payload is file.
