@@ -4,7 +4,9 @@ CC = clang
 # Directories.
 BUILD_DIR := build
 SRC_DIR := src
-YAML_DIR := libyaml
+MODULES_DIR := modules
+
+YAML_DIR := $(MODULES_DIR)/libyaml
 
 # Source and out files.
 UTILS_SRC := utils.c
@@ -47,7 +49,6 @@ config: libyaml mk_build
 # Cleanup (remove object files and clean LibYAML).
 clean:
 	rm -f $(BUILD_DIR)/*.o
-	$(MAKE) $(YAML_DIR)/ clean
 
 .PHONY:
 
