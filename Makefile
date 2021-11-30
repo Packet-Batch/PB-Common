@@ -34,7 +34,7 @@ mk_build:
 
 # LibYAML library we need to install.
 libyaml:
-	cd libyaml; ./bootstrap && ./configure
+	cd $(YAML_DIR)/; ./bootstrap && ./configure
 	$(MAKE) -C $(YAML_DIR)/
 	$(MAKE) -C $(YAML_DIR)/ install
 
