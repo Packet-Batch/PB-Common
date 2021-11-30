@@ -36,7 +36,7 @@ config: libyaml mkbuild
 
 clean:
 	rm -f $(BUILD_DIR)/*.o
-	$(MAKE) $(YAML_DIR) clean
+	$(MAKE) $(YAML_DIR)/ clean
 
 .PHONY:
 
