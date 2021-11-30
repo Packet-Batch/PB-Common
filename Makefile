@@ -5,6 +5,7 @@ CC = clang
 BUILD_DIR := build
 SRC_DIR := src
 MODULES_DIR := modules
+DATA_DIR := data
 
 YAML_DIR := $(MODULES_DIR)/libyaml
 
@@ -17,6 +18,9 @@ CMD_LINE_OUT := cmd_line.o
 
 CONFIG_SRC := config.c
 CONFIG_OUT := config.o
+
+# Config file.
+CONFIG_EX := pcktbatch.yaml
 
 # Global flags for optimization and telling the compiler we want object files.
 GLOBAL_FLAGS := -O2 -c
@@ -45,6 +49,11 @@ cmd_line: mk_build
 # The config file.
 config: libyaml mk_build
 	$(CC) $(GLOBAL_FLAGS) -o $(BUILD_DIR)/$(CONFIG_OUT) $(SRC_DIR)/$(CONFIG_SRC)
+
+# Install (copy base config file if it doesn't already exist).
+install:
+	mkdir -p /etc/pcktbatch
+	cp -n $(DATA_DIR)/$(CONFIG_EX) /etc/pcktbatch/$(CONFIG_EX)
 
 # Cleanup (remove object files and clean LibYAML).
 clean:
