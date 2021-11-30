@@ -3,7 +3,7 @@
 #include <getopt.h>
 #include <string.h>
 
-#include "cmdline.h"
+#include "cmd_line.h"
 #include "config.h"
 
 static struct option long_opts[] =
@@ -68,13 +68,13 @@ static struct option long_opts[] =
 /**
  * Parses CLI options if --cli is passed.
  * 
- * @param cmd The cmdline structure to grab the command line values from.
+ * @param cmd The cmd_line structure to grab the command line values from.
  * @param cfg The config structure to save the command line values to.
  * @param sequence
  * 
  * @return void
 **/
-void parse_cli(struct cmdline *cmd, struct config *cfg)
+void parse_cli(struct cmd_line *cmd, struct config *cfg)
 {
     /* Parse main options. */
     if (cmd->cl_interface != NULL)
@@ -91,8 +91,8 @@ void parse_cli(struct cmdline *cmd, struct config *cfg)
     cfg->seq[0].threads = cmd->cl_threads;
     cfg->seq[0].l4_csum = cmd->cl_l4_csum;
 
-    cfg->seq[0].eth.smac = cmd->cl_smac;
-    cfg->seq[0].eth.dmac = cmd->cl_dmac;
+    cfg->seq[0].eth.src_mac = cmd->cl_src_mac;
+    cfg->seq[0].eth.dst_mac = cmd->cl_dst_mac;
 
     cfg->seq[0].ip.min_ttl = cmd->cl_ttl_min;
     cfg->seq[0].ip.max_ttl = cmd->cl_ttl_max;
@@ -116,7 +116,7 @@ void parse_cli(struct cmdline *cmd, struct config *cfg)
 
     if (cmd->cl_dst_ip != NULL)
     {
-        cfg->seq[0].ip.dstip = cmd->cldstip;
+        cfg->seq[0].ip.dst_ip = cmd->cl_dst_ip;
     }
 
     cfg->seq[0].ip.protocol = cmd->cl_protocol;
@@ -141,7 +141,7 @@ void parse_cli(struct cmdline *cmd, struct config *cfg)
 
     cfg->seq[0].pl.min_len = cmd->cl_pl_min_len;
     cfg->seq[0].pl.max_len = cmd->cl_pl_max_len;
-    cfg->seq[0].pl.static_data = cmd->cl_pl_static_data;
+    cfg->seq[0].pl.is_static = cmd->cl_pl_is_static;
 
     if (cmd->cl_pl_exact != NULL)
     {
@@ -157,11 +157,11 @@ void parse_cli(struct cmdline *cmd, struct config *cfg)
  * 
  * @param argc The argument counter passed in the `int main()` function.
  * @param argv The argument array pointer passed in the `int main()` function.
- * @param cmd A pointer to the `cmdline` structure that stores all command line values.
+ * @param cmd A pointer to the `cmd_line` structure that stores all command line values.
  * 
  * @return void
 **/
-void parsecmdline(int argc, char *argv[], struct cmdline *cmd)
+void parse_cmd_line(int argc, char *argv[], struct cmd_line *cmd)
 {
     int c = -1;
 
@@ -224,7 +224,7 @@ void parsecmdline(int argc, char *argv[], struct cmdline *cmd)
                 case 7:
                 {
                     char *val = strdup(optarg);
-                    cmd->cl_data = strtoull((const char *)val, (char **)val, 0);
+                    cmd->cl_max_data = strtoull((const char *)val, (char **)val, 0);
 
                     break;
                 }
@@ -315,7 +315,7 @@ void parsecmdline(int argc, char *argv[], struct cmdline *cmd)
                     break;
 
                 case 25:
-                    cmd->cltcpsyn = atoi(optarg);
+                    cmd->cl_tcp_syn = atoi(optarg);
 
                     break;
 

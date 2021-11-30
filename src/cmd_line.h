@@ -3,7 +3,7 @@
 #include <linux/types.h>
 #include "config.h"
 
-struct cmdline
+struct cmd_line
 {
     const char *config;
     unsigned int list : 1;
@@ -59,5 +59,5 @@ struct cmdline
     unsigned int cl_pl_is_string : 1;
 };
 
-void parsecmdline(int argc, char *argv[], struct cmdline *cmd);
-void parsecli(struct cmdline *cmd, struct config *cfg);
+void parse_cmd_line(int argc, char *argv[], struct cmd_line *cmd);
+void parse_cli(struct cmd_line *cmd, struct config *cfg);
