@@ -70,10 +70,10 @@ sequences:
         # Ethernet header options.
         eth:
             # The source MAC address. If not set, the program will retrieve the MAC address of the interface we are binding to (the "interface" value).
-            smac: NULL
+            srcmac: NULL
 
             # The destination MAC address. If not set, the program will retrieve the default gateway's MAC address.
-            dmac: NULL
+            dstmac: NULL
         
         # IP header options.
         ip:
@@ -173,10 +173,10 @@ sequences:
                 # The maximum payload length in bytes (payload is randomly generated).
                 max: 0
 
-                # If true, the program will only generate one payload per thread and generic the checksums once. In many cases, this will result in a huge performance gain because generating random payload per packet consumes a lot of CPU cycles depending on the payload length.
-                static: false
-            
-            # If true, the program will read data from the file 'exact' (below) is set to. The data within the file should be in the same format as the 'exact' setting without file support which is hexadecimal and separated by a space (e.g. "FF FF FF FF 59").
+            # If true, the application will only generate one payload per thread between the minimum and maximum lengths and generate the checksums once. In many cases, this will result in a huge performance gain because generating random payload per packet consumes a lot of CPU cycles depending on the payload length.
+            static: false
+
+            # If true, the application will read data from the file 'exact' (below) is set to. The data within the file should be in the same format as the 'exact' setting without file support which is hexadecimal and separated by a space (e.g. "FF FF FF FF 59").
             isfile: false
 
             # If true, will parse the payload (either in 'exact' or the file within 'exact') as a string instead of hexadecimal.
@@ -219,8 +219,8 @@ The following command line options are available to override the first sequence.
 --threads => The amount of threads and sockets to spawn (0 = CPU count).
 --l4csum => Whether to calculate the layer-4 checksum (TCP, UDP, and ICMP) (0/1).
 
---smac => The ethernet source MAC address to use.
---dmac => The ethernet destination MAC address to use.
+--srcmac => The ethernet source MAC address to use.
+--dstmac => The ethernet destination MAC address to use.
 
 --minttl => The minimum IP TTL to use.
 --maxttl => The maximum IP TTL to use.
@@ -232,18 +232,18 @@ The following command line options are available to override the first sequence.
 --tos => The IP TOS to use.
 --l3csum => Whether to calculate the IP header checksum or not (0/1).
 
---usport => The UDP source port.
---udport => The UDP destination port.
+--usrcport => The UDP source port.
+--udstport => The UDP destination port.
 
---tsport => The TCP source port.
---tdport => The TCP destination port.
+--tsrcport => The TCP source port.
+--tdstport => The TCP destination port.
 --tsyn => Set the TCP SYN flag (0/1).
 --tack => Set the TCP ACK flag (0/1).
 --tpsh => Set the TCP PSH flag (0/1).
 --trst => Set the TCP RST flag (0/1).
 --tfin => Set the TCP FIN flag (0/1).
 --turg => Set the TCP URG flag (0/1).
---tcpusecooked => Use TCP cooked socket (0/1).
+--tcpusesocket => Use TCP cooked socket (0/1).
 
 --pmin => The minimum payload data.
 --pmax => The maximum payload data.
