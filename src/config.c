@@ -307,13 +307,13 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
                         else if (in_eth)
                         {
                             // Check for source MAC.
-                            if (prev_key != NULL && !strcmp(prev_key, "smac"))
+                            if (prev_key != NULL && !strcmp(prev_key, "srcmac"))
                             {
                                 cfg->seq[*seq_num].eth.src_mac = strdup((const char *)ev.data.scalar.value);
                             }
 
                             // Check for destination MAC.
-                            if (prev_key != NULL && !strcmp(prev_key, "dmac"))
+                            if (prev_key != NULL && !strcmp(prev_key, "dstmac"))
                             {
                                 cfg->seq[*seq_num].eth.dst_mac = strdup((const char *)ev.data.scalar.value);
                             }
@@ -493,7 +493,7 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
                                 }
 
                                 // Check for static pl.
-                                if (prev_key != NULL && !strcmp(prev_key, "static"))
+                                if (prev_key != NULL && !strcmp(prev_key, "isstatic"))
                                 {
                                     cfg->seq[*seq_num].pl.is_static = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
                                 }
