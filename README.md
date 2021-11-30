@@ -186,7 +186,7 @@ There are a number of command line options available for Packet Batch. These are
 Basic command line usage may be found below.
 
 ```bash
-Usage: pcktseq -c <configfile> [-v -h]
+Usage: pcktbatch -c <configfile> [-v -h]
 
 -c --cfg => Path to YAML file to parse.
 -l --list => Print basic information about sequences.
