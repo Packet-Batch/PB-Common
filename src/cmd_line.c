@@ -403,11 +403,6 @@ void parse_cmd_line(int argc, char *argv[], struct cmd_line *cmd)
                     cmd->help = 1;
 
                     break;
-
-                case '?':
-                    fprintf(stderr, "Missing argument.\n");
-
-                    break;
             }
         }
         else
