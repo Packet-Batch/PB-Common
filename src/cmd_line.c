@@ -165,249 +165,242 @@ void parse_cmd_line(int argc, char *argv[], struct cmd_line *cmd)
 {
     int c = -1;
 
-    while (optind < argc)
+    while ((c = getopt_long(argc, argv, "c:zhvl", long_opts, NULL)) != -1)
     {
-        if ((c = getopt_long(argc, argv, "c:zhvl", long_opts, NULL)) != -1)
+        switch (c)
         {
-            switch (c)
+            case 'c':
+                cmd->config = optarg;
+
+                break;
+
+            case 'z':
+                cmd->cli = 1;
+
+                break;
+
+            /* CLI options. */
+            case 0:
+                cmd->cl_interface = optarg;
+
+                break;
+
+            case 2:
+                cmd->cl_block = atoi(optarg);
+
+                break;
+
+            case 3:
             {
-                case 'c':
-                    cmd->config = optarg;
+                char *val = strdup(optarg);
+                cmd->cl_count = strtoull((const char *)val, (char **)val, 0);
 
-                    break;
-
-                case 'z':
-                    cmd->cli = 1;
-
-                    break;
-
-                /* CLI options. */
-                case 0:
-                    cmd->cl_interface = optarg;
-
-                    break;
-
-                case 2:
-                    cmd->cl_block = atoi(optarg);
-
-                    break;
-
-                case 3:
-                {
-                    char *val = strdup(optarg);
-                    cmd->cl_count = strtoull((const char *)val, (char **)val, 0);
-
-                    break;
-                }
-
-                case 4:
-                {
-                    char *val = strdup(optarg);
-                    cmd->cl_time = strtoull((const char *)val, (char **)val, 0);
-
-                    break;
-                }
-
-                case 5:
-                {
-                    char *val = strdup(optarg);
-                    cmd->cl_delay = strtoull((const char *)val, (char **)val, 0);
-
-                    break;
-                }
-
-                case 6:
-                    cmd->cl_track_count = atoi(optarg);
-
-                    break;
-
-                case 7:
-                {
-                    char *val = strdup(optarg);
-                    cmd->cl_max_data = strtoull((const char *)val, (char **)val, 0);
-
-                    break;
-                }
-
-                case 8:
-                    cmd->cl_threads = atoi(optarg);
-
-                    break;
-
-                case 9:
-                    cmd->cl_l4_csum = atoi(optarg);
-
-                    break;
-
-                case 10:
-                    cmd->cl_src_mac = optarg;
-
-                    break;
-
-                case 11:
-                    cmd->cl_dst_mac = optarg;
-
-                    break;
-
-                case 12:
-                    cmd->cl_ttl_min = atoi(optarg);
-
-                    break;
-
-                case 13:
-                    cmd->cl_ttl_max = atoi(optarg);
-
-                    break;
-
-                case 14:
-                    cmd->cl_id_min = atoi(optarg);
-
-                    break;
-
-                case 15:
-                    cmd->cl_id_max = atoi(optarg);
-
-                    break;
-
-                case 16:
-                    cmd->cl_src_ip = optarg;
-
-                    break;
-
-                case 17:
-                    cmd->cl_dst_ip = optarg;
-
-                    break;
-
-                case 18:
-                    cmd->cl_protocol = optarg;
-
-                    break;
-
-                case 19:
-                    cmd->cl_tos = atoi(optarg);
-
-                    break;
-
-                case 20:
-                    cmd->cl_l3_csum = atoi(optarg);
-
-                    break;
-
-                case 21:
-                    cmd->cl_udp_src_port = atoi(optarg);
-
-                    break;
-
-                case 22:
-                    cmd->cl_udp_dst_port = atoi(optarg);
-
-                    break;
-
-                case 23:
-                    cmd->cl_tcp_src_port = atoi(optarg);
-
-                    break;
-
-                case 24:
-                    cmd->cl_tcp_dst_port = atoi(optarg);
-
-                    break;
-
-                case 25:
-                    cmd->cl_tcp_syn = atoi(optarg);
-
-                    break;
-
-                case 26:
-                    cmd->cl_tcp_ack = atoi(optarg);
-
-                    break;
-
-                case 27:
-                    cmd->cl_tcp_psh = atoi(optarg);
-
-                    break;
-
-                case 28:
-                    cmd->cl_tcp_rst = atoi(optarg);
-
-                    break;
-
-                case 29:
-                    cmd->cl_tcp_fin = atoi(optarg);
-
-                    break;
-
-                case 30:
-                    cmd->cl_tcp_urg = atoi(optarg);
-
-                    break;
-
-                case 31:
-                    cmd->cl_tcp_use_socket = atoi(optarg);
-
-                    break;
-
-                case 32:
-                    cmd->cl_pl_min_len = atoi(optarg);
-
-                    break;
-
-                case 33:
-                    cmd->cl_pl_max_len = atoi(optarg);
-
-                    break;
-
-                case 34:
-                    cmd->cl_pl_is_static = atoi(optarg);
-
-                    break;
-
-                case 35:
-                    cmd->cl_pl_exact = optarg;
-
-                    break;
-
-                case 36:
-                    cmd->cl_pl_is_file = atoi(optarg);
-
-                    break;
-
-                case 37:
-                    cmd->cl_pl_is_string = atoi(optarg);
-
-                    break;
-					
-                case 38:
-                    cmd->cl_icmp_code = atoi(optarg);
-
-                    break;
-					
-                case 39:
-                    cmd->cl_icmp_type = atoi(optarg);
-
-                    break;
-
-                case 'l':
-                    cmd->list = 1;
-
-                    break;
-
-                case 'v':
-                    cmd->verbose = 1;
-
-                    break;
-
-                case 'h':
-                    cmd->help = 1;
-
-                    break;
+                break;
             }
-        }
-        else
-        {
-            optind++;
+
+            case 4:
+            {
+                char *val = strdup(optarg);
+                cmd->cl_time = strtoull((const char *)val, (char **)val, 0);
+
+                break;
+            }
+
+            case 5:
+            {
+                char *val = strdup(optarg);
+                cmd->cl_delay = strtoull((const char *)val, (char **)val, 0);
+
+                break;
+            }
+
+            case 6:
+                cmd->cl_track_count = atoi(optarg);
+
+                break;
+
+            case 7:
+            {
+                char *val = strdup(optarg);
+                cmd->cl_max_data = strtoull((const char *)val, (char **)val, 0);
+
+                break;
+            }
+
+            case 8:
+                cmd->cl_threads = atoi(optarg);
+
+                break;
+
+            case 9:
+                cmd->cl_l4_csum = atoi(optarg);
+
+                break;
+
+            case 10:
+                cmd->cl_src_mac = optarg;
+
+                break;
+
+            case 11:
+                cmd->cl_dst_mac = optarg;
+
+                break;
+
+            case 12:
+                cmd->cl_ttl_min = atoi(optarg);
+
+                break;
+
+            case 13:
+                cmd->cl_ttl_max = atoi(optarg);
+
+                break;
+
+            case 14:
+                cmd->cl_id_min = atoi(optarg);
+
+                break;
+
+            case 15:
+                cmd->cl_id_max = atoi(optarg);
+
+                break;
+
+            case 16:
+                cmd->cl_src_ip = optarg;
+
+                break;
+
+            case 17:
+                cmd->cl_dst_ip = optarg;
+
+                break;
+
+            case 18:
+                cmd->cl_protocol = optarg;
+
+                break;
+
+            case 19:
+                cmd->cl_tos = atoi(optarg);
+
+                break;
+
+            case 20:
+                cmd->cl_l3_csum = atoi(optarg);
+
+                break;
+
+            case 21:
+                cmd->cl_udp_src_port = atoi(optarg);
+
+                break;
+
+            case 22:
+                cmd->cl_udp_dst_port = atoi(optarg);
+
+                break;
+
+            case 23:
+                cmd->cl_tcp_src_port = atoi(optarg);
+
+                break;
+
+            case 24:
+                cmd->cl_tcp_dst_port = atoi(optarg);
+
+                break;
+
+            case 25:
+                cmd->cl_tcp_syn = atoi(optarg);
+
+                break;
+
+            case 26:
+                cmd->cl_tcp_ack = atoi(optarg);
+
+                break;
+
+            case 27:
+                cmd->cl_tcp_psh = atoi(optarg);
+
+                break;
+
+            case 28:
+                cmd->cl_tcp_rst = atoi(optarg);
+
+                break;
+
+            case 29:
+                cmd->cl_tcp_fin = atoi(optarg);
+
+                break;
+
+            case 30:
+                cmd->cl_tcp_urg = atoi(optarg);
+
+                break;
+
+            case 31:
+                cmd->cl_tcp_use_socket = atoi(optarg);
+
+                break;
+
+            case 32:
+                cmd->cl_pl_min_len = atoi(optarg);
+
+                break;
+
+            case 33:
+                cmd->cl_pl_max_len = atoi(optarg);
+
+                break;
+
+            case 34:
+                cmd->cl_pl_is_static = atoi(optarg);
+
+                break;
+
+            case 35:
+                cmd->cl_pl_exact = optarg;
+
+                break;
+
+            case 36:
+                cmd->cl_pl_is_file = atoi(optarg);
+
+                break;
+
+            case 37:
+                cmd->cl_pl_is_string = atoi(optarg);
+
+                break;
+                
+            case 38:
+                cmd->cl_icmp_code = atoi(optarg);
+
+                break;
+                
+            case 39:
+                cmd->cl_icmp_type = atoi(optarg);
+
+                break;
+
+            case 'l':
+                cmd->list = 1;
+
+                break;
+
+            case 'v':
+                cmd->verbose = 1;
+
+                break;
+
+            case 'h':
+                cmd->help = 1;
+
+                break;
         }
     }
 }
