@@ -20,7 +20,7 @@ There are three versions of Packet Batch that will be supported. As of right now
 
 * [Standard](https://github.com/Packet-Batch/PB-Standard) - Uses `AF_PACKETv3` sockets and supports TCP cookied sockets for easy TCP connection establishing.
 * [AF_XDP](https://github.com/Packet-Batch/PB-AF-XDP) - Uses `AF_XDP` sockets which is faster than `AF_PACKETv3`, but doesn't support TCP cooked sockets.
-* **[NF]** [DPDK](https://github.com/Packet-Batch/PB-DPDK) - Uses [the DPDK](https://dpdk.org) which is faster than all other versions, but since the DPDK is a kernel-bypass library, it is harder to setup and only supports certain hardware. Also doesn't support TCP cooked sockets.
+* [DPDK](https://github.com/Packet-Batch/PB-DPDK) - Uses [the DPDK](https://dpdk.org) which is faster than all other versions, but since the DPDK is a kernel-bypass library, it is harder to setup and only supports certain hardware. Also doesn't support TCP cooked sockets.
 
 **NOTE** - **NF** means **N**ot **F**inished.
 
