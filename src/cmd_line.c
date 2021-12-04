@@ -161,7 +161,7 @@ void parse_cli(struct cmd_line *cmd, struct config *cfg)
  * 
  * @return void
 **/
-void parse_cmd_line(int argc, char *argv[], struct cmd_line *cmd)
+void parse_cmd_line(int argc, char **argv, struct cmd_line *cmd)
 {
     int c = -1;
 
