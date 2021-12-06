@@ -262,6 +262,9 @@ The following should work.
 # Clone the Packet Batch Common repository.
 git clone --recursive https://github.com/Packet-Batch/PB-Common.git
 
+# Install build essentials/tools and needed libaries for LibYAML.
+sudo apt install build-essential clang autoconf libtool
+
 # Change current working directory to PB-Common/.
 cd PB-Common/
 
