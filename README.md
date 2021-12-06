@@ -1,4 +1,6 @@
 # Packet Batch (Common)
+[![Packet Batch Common Build Workflow](https://github.com/Packet-Batch/PB-Common/actions/workflows/build.yml/badge.svg)](https://github.com/Packet-Batch/PB-Common/actions/workflows/build.yml)
+
 ## Description
 This is a repository for Packet Batch that includes common files for all versions of Packet Batch to use (standard, AF_XDP, and the DPDK). This includes source files to parse YAML config files, the command line, and a few other useful functions (utils).
 
