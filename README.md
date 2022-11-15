@@ -18,13 +18,11 @@ With that said, this tool acts as a DoS (Denial-of-Service) attack tool/applicat
 **NOTE** - This project was inspired by my previous Packet Sequence [project](https://github.com/gamemann/Packet-Sequence). Packet Sequence only supported `AF_PACKETv3` Linux sockets, however. In an effort to simplify code, I decided to make a new organization and project which'll support special versions for AF_XDP Linux sockets and the DPDK which should be much faster than the standard version (with the exception of no TCP cooked sockets support).
 
 ## Packet Batch Applications/Versions
-There are three versions of Packet Batch that will be supported. As of right now, only the standard is completed.
+There are three supported versions of Packet Batch.
 
 * [Standard](https://github.com/Packet-Batch/PB-Standard) - Uses `AF_PACKETv3` sockets and supports TCP cookied sockets for easy TCP connection establishing.
 * [AF_XDP](https://github.com/Packet-Batch/PB-AF-XDP) - Uses `AF_XDP` sockets which is faster than `AF_PACKETv3`, but doesn't support TCP cooked sockets.
 * [DPDK](https://github.com/Packet-Batch/PB-DPDK) - Uses [the DPDK](https://dpdk.org) which is faster than all other versions, but since the DPDK is a kernel-bypass library, it is harder to setup and only supports certain hardware. Also doesn't support TCP cooked sockets.
-
-**NOTE** - **NF** means **N**ot **F**inished.
 
 ## Dependencies
 * [LibYAML](https://github.com/yaml/libyaml) - Used for parsing config files using the YAML syntax.
