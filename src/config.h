@@ -117,3 +117,4 @@ struct config
 
 int parse_config(const char file_name[], struct config *cfg, int only_seq, int *seq_num, __u8 log);
 void clear_sequence(struct config *cfg, int seq_num);
+void print_config(struct config *cfg, int seq_cnt);
