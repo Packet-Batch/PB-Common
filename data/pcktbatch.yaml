@@ -1,5 +1,5 @@
-# The interface to use when sending/(receiving) packets.
-interface: NULL
+# The interface to use when sending/(receiving) packets. Find this via 'ifconfig' or 'ip a' commands (or something that suits your Linux distro).
+#interface: mydevice
 
 sequences:
     seq01:
@@ -9,7 +9,7 @@ sequences:
             - /etc/pcktbatch/include_two.yaml
 
         # If set, will use a specific interface for this sequence. Otherwise, uses the default interface specified at the beginning of the config.
-        interface: NULL
+        #interface: mydevice
 
         # If true, future sequences will wait until this one finishes before executing.
         block: true
@@ -35,10 +35,10 @@ sequences:
         # Ethernet header options.
         eth:
             # The source MAC address. If not set, the program will retrieve the MAC address of the interface we are binding to (the "interface" value).
-            smac: NULL
+            #smac: 00:00:00:00:00:00
 
             # The destination MAC address. If not set, the program will retrieve the default gateway's MAC address.
-            dmac: NULL
+            #dmac: 00:00:00:00:00:00
         
         # IP header options.
         ip:
@@ -49,10 +49,10 @@ sequences:
                 - 192.168.30.0/24
             
             # The source IPv4 address. If not set, you will need to specify source ranges in CIDR format like the above. If no source IP ranges are set, a warning will be outputted to `stderr` and 127.0.0.1 (localhost) will be used.
-            srcip: NULL
+            #srcip: 0.0.0.0
 
             # The destination IPv4 address. If not set, the program will output an error. We require a value here. Otherwise, the program will shutdown.
-            dstip: NULL
+            #dstip: 0.0.0.0
 
             # The IP protocol to use. At the moment, the only supported values are udp, tcp, and icmp.
             protocol: udp
@@ -148,4 +148,4 @@ sequences:
             isstring: false
 
             # If a string, will set the payload to exactly this value. Each byte should be in hexadecimal and separated by a space. For example: "FF FF FF FF 59" (5 bytes of payload data).
-            exact: NULL
+            #exact: 00 00 00 00 00 
