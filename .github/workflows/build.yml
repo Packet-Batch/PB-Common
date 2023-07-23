@@ -19,7 +19,9 @@ jobs:
       run: sudo apt update
     - name: Install LibYAML dependencies
       run: sudo apt install -y autoconf libtool
-    - name: Make project
-      run: sudo make
-    - name: Install project
+    - name: Build LibYAML
+      run: sudo make libyaml
+    - name: Build Common objects
+      run: make
+    - name: Install Common files such as config
       run: sudo make install
