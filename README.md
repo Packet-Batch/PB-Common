@@ -268,10 +268,13 @@ sudo apt install build-essential clang autoconf libtool
 # Change current working directory to PB-Common/.
 cd PB-Common/
 
-# Build and install (must be executed as root via sudo or root user due to libyaml installation).
-sudo make
+# First, we want to build and install YAML. The `libyaml` chain in our Makefile does this automatically, but must be ran with root or sudo.
+sudo make libyaml
 
-# Installing will copy default Packet Batch config to `/etc/pcktbatch/pcktbatch.yaml`.
+# Now make our common objects. You may also specify the `-j` flag followed with a number to integer the amount of threads our build process uses.
+make
+
+# Installing will copy default Packet Batch config to `/etc/pcktbatch/pcktbatch.yaml`. This must be ran as root or with sudo.
 sudo make install
 ```
 

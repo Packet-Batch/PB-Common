@@ -26,7 +26,7 @@ CONFIG_EX := pcktbatch.yaml
 GLOBAL_FLAGS := -O2 -c
 
 # Chains.
-all: libyaml mk_build utils cmd_line config
+all: mk_build utils cmd_line config
 
 # Creates the build directory if it doesn't already exist.
 mk_build:
@@ -47,7 +47,7 @@ cmd_line: mk_build
 	$(CC) $(GLOBAL_FLAGS) -o $(BUILD_DIR)/$(CMD_LINE_OUT) $(SRC_DIR)/$(CMD_LINE_SRC)
 
 # The config file.
-config: libyaml mk_build
+config: mk_build
 	$(CC) $(GLOBAL_FLAGS) -o $(BUILD_DIR)/$(CONFIG_OUT) $(SRC_DIR)/$(CONFIG_SRC)
 
 # Install (copy base config file if it doesn't already exist).
@@ -58,6 +58,7 @@ install:
 # Cleanup (remove object files and clean LibYAML).
 clean:
 	rm -f $(BUILD_DIR)/*.o
+	$(MAKE) -C $(YAML_DIR)/ clean
 
 .PHONY:
 
