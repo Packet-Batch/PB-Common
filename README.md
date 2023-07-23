@@ -276,6 +276,9 @@ make
 
 # Installing will copy default Packet Batch config to `/etc/pcktbatch/pcktbatch.yaml`. This must be ran as root or with sudo.
 sudo make install
+
+# (Not Required) If you want to clean our build, use the following. It must be ran as root or with sudo because we're also cleaning our LibYAML sub-module.
+sudo make clean
 ```
 
 ## Credits
