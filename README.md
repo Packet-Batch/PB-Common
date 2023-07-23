@@ -268,14 +268,11 @@ sudo apt install build-essential clang autoconf libtool
 # Change current working directory to PB-Common/.
 cd PB-Common/
 
-# First, we want to build and install YAML. The `libyaml` chain in our Makefile does this automatically, but must be ran with root or sudo.
-sudo make libyaml
-
-# Now make our common objects. You may also specify the `-j` flag followed with a number to integer the amount of threads our build process uses.
-make
-
-# Installing will copy default Packet Batch config to `/etc/pcktbatch/pcktbatch.yaml`. This must be ran as root or with sudo.
-sudo make install
+# Execute ./build.sh file to build and install dependencies and main project which requires sudo privileges.
+# WARNING - If you don't have sudo available on your system, please look at the ./build.sh file and execute make commands as root in order.
+# NOTE - You may also look at the .github/workflows/build.yml.
+# NOTE - The first argument represents the amount of threads to use with make. 0 uses the amount of available threads on the system and supplying no argument uses 1 thread.
+./build.sh 0
 
 # (Not Required) If you want to clean our build, use the following. It must be ran as root or with sudo because we're also cleaning our LibYAML sub-module.
 sudo make clean
