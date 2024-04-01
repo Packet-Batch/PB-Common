@@ -136,5 +136,12 @@ char *rand_ip(char *range, __u16 *pckt_count)
     struct in_addr rand_ip_str;
     rand_ip_str.s_addr = htonl(rand_ip);
 
+    // Free pointers we longer need.
+    if (s_ip != NULL)
+        free(s_ip);
+
+    if (cidr_str != NULL)
+        free(cidr_str);
+
     return inet_ntoa(rand_ip_str);
 }
