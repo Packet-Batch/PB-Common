@@ -155,6 +155,9 @@ sequences:
             # NOTE - This is only supported for the standard version.
             usesocket: false
 
+            # If true, when using a cooked socket above, one socket/connection will be open per sequence. Otherwise, it will open a new connection/socket each time.
+            oneconnection: false
+
         # ICMP header options.
         icmp:
             # The code to use with the ICMP packet.
@@ -244,6 +247,7 @@ The following command line options are available to override the first sequence.
 --tfin => Set the TCP FIN flag (0/1).
 --turg => Set the TCP URG flag (0/1).
 --tcpusesocket => Use TCP cooked socket (0/1).
+--oneconnection => Use one TCP connection per cooked socket (0/1).
 
 --pmin => The minimum payload data.
 --pmax => The maximum payload data.

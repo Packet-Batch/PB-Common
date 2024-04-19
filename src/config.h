@@ -53,6 +53,7 @@ struct tcp_opt
     unsigned int urg : 1;
 
     unsigned int use_socket : 1;
+    unsigned int one_connection : 1;
 };
 
 struct udp_opt

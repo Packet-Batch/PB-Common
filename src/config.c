@@ -460,6 +460,12 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
                             {
                                 cfg->seq[*seq_num].tcp.use_socket = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
                             }
+
+                            // One connection.
+                            if (prev_key != NULL && !strcmp(prev_key, "oneconnection"))
+                            {
+                                cfg->seq[*seq_num].tcp.one_connection = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
+                            }
                         }
                         else if (in_icmp)
                         {
@@ -660,6 +666,7 @@ void clear_sequence(struct config *cfg, int seq_num)
     cfg->seq[seq_num].tcp.fin = 0;
     cfg->seq[seq_num].tcp.urg = 0;
     cfg->seq[seq_num].tcp.use_socket = 0;
+    cfg->seq[seq_num].tcp.one_connection = 0;
     
     cfg->seq[seq_num].icmp.code = 0;
     cfg->seq[seq_num].icmp.type = 0;
@@ -761,6 +768,7 @@ void print_config(struct config *cfg, int seq_cnt)
         fprintf(stdout, "\t\tSource Port => %d\n", seq->tcp.src_port);
         fprintf(stdout, "\t\tDest Port => %d\n", seq->tcp.dst_port);
         fprintf(stdout, "\t\tUse Socket => %s\n", seq->tcp.use_socket ? "Yes" : "No");
+        fprintf(stdout, "\t\tOne Connection => %s\n", seq->tcp.one_connection ? "Yes" : "No");
         fprintf(stdout, "\t\tSYN Flag => %s\n", seq->tcp.syn ? "Yes": "No");
         fprintf(stdout, "\t\tPSH Flag => %s\n", seq->tcp.psh ? "Yes" : "No");
         fprintf(stdout, "\t\tFIN Flag => %s\n", seq->tcp.fin ? "Yes" : "No");

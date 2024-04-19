@@ -48,6 +48,7 @@ static struct option long_opts[] =
     {"tfin", required_argument, NULL, 29},
     {"turg", required_argument, NULL, 30},
     {"tusesocket", required_argument, NULL, 31},
+    {"oneconnection", required_argument, NULL, 40},
 
     {"icode", required_argument, NULL, 38},
     {"itype", required_argument, NULL, 39},
@@ -135,6 +136,7 @@ void parse_cli(struct cmd_line *cmd, struct config *cfg)
     cfg->seq[0].tcp.fin = cmd->cl_tcp_fin;
     cfg->seq[0].tcp.urg = cmd->cl_tcp_urg;
     cfg->seq[0].tcp.use_socket = cmd->cl_tcp_use_socket;
+    cfg->seq[0].tcp.one_connection = cmd->cl_tcp_one_connection;
 
     cfg->seq[0].icmp.code = cmd->cl_icmp_code;
     cfg->seq[0].icmp.type = cmd->cl_icmp_type;
@@ -384,6 +386,11 @@ void parse_cmd_line(int argc, char **argv, struct cmd_line *cmd)
                 
             case 39:
                 cmd->cl_icmp_type = atoi(optarg);
+
+                break;
+
+            case 40:
+                cmd->cl_tcp_one_connection = atoi(optarg);
 
                 break;
 
