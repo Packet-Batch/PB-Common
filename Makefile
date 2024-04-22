@@ -1,13 +1,20 @@
 # Use Clang to compile the common files.
 CC = clang
 
+# Package config.
+PKG_CONF = pkg-config
+
+ifeq ($(shell which $(PKG_CONF)),)
+$(error "Package config not found. Please install it on server.")
+endif
+
 # Directories.
 BUILD_DIR := build
 SRC_DIR := src
 MODULES_DIR := modules
 DATA_DIR := data
-
-YAML_DIR := $(MODULES_DIR)/libyaml
+JSONC_DIR := $(MODULES_DIR)/json-c
+TESTS_DIR := tests
 
 # Source and out files.
 UTILS_SRC := utils.c
@@ -20,7 +27,7 @@ CONFIG_SRC := config.c
 CONFIG_OUT := config.o
 
 # Config file.
-CONFIG_EX := pcktbatch.yaml
+CONFIG_EX := conf.json
 
 # Global flags for optimization and telling the compiler we want object files.
 GLOBAL_FLAGS := -O2 -c
@@ -33,10 +40,12 @@ mk_build:
 	mkdir -p $(BUILD_DIR)
 
 # LibYAML library we need to install.
-libyaml:
-	cd $(YAML_DIR)/; ./bootstrap && ./configure
-	$(MAKE) -C $(YAML_DIR)/
-	$(MAKE) -C $(YAML_DIR)/ install
+jsonc:
+	mkdir -p $(JSONC_DIR)/build
+	cd $(JSONC_DIR)/build && cmake ../
+
+jsonc_install:
+	cd $(JSONC_DIR)/build && make && make install
 
 # The utils file.
 utils: mk_build
@@ -50,6 +59,9 @@ cmd_line: mk_build
 config: mk_build
 	$(CC) $(GLOBAL_FLAGS) -o $(BUILD_DIR)/$(CONFIG_OUT) $(SRC_DIR)/$(CONFIG_SRC)
 
+custom_tests:
+	$(CC) -O2 -g -I src/ $(shell $(PKG_CONF) --libs json-c) $(BUILD_DIR)/$(CMD_LINE_OUT) $(BUILD_DIR)/$(CONFIG_OUT) -o $(BUILD_DIR)/test_cfg_print $(TESTS_DIR)/cfg_print.c
+
 # Install (copy base config file if it doesn't already exist).
 install:
 	mkdir -p /etc/pcktbatch
@@ -58,7 +70,7 @@ install:
 # Cleanup (remove object files and clean LibYAML).
 clean:
 	rm -f $(BUILD_DIR)/*.o
-	$(MAKE) -C $(YAML_DIR)/ clean
+	rm -rf $(JSONC_DIR)/build/*
 
 .PHONY:
 
