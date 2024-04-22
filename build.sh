@@ -12,10 +12,14 @@ fi
 
 echo "Building Packet Batch (Common) using $THREADS threads..."
 
-# First, we want to build LibYAML.
-echo "Building LibYAML..."
-sudo make -j $THREADS libyaml
+# First, we want to build JSON-C.
+echo "Building JSON-C..."
+make jsonc
 echo "Done..."
+
+# Install JSON-C.
+echo "Installing JSON-C..."
+sudo make jsonc_install
 
 # Next build main project.
 echo "Building Main..."
