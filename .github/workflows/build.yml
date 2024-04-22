@@ -17,12 +17,12 @@ jobs:
         submodules: recursive
     - name: Run apt update
       run: sudo apt update
-    - name: Install LibYAML dependencies
+    - name: Install dependencies
       run: sudo apt install -y cmake pkgconf autoconf libtool
     - name: Build JSON-C
       run: make jsonc
     - name: Install JSON-C
-      run: make jsonc_install
+      run: sudo make jsonc_install
     - name: Build Common objects
       run: make
     - name: Install Common files such as config
