@@ -30,24 +30,26 @@ static struct option long_opts[] =
     {"maxttl", required_argument, NULL, 13},
     {"minid", required_argument, NULL, 14},
     {"maxid", required_argument, NULL, 15},
-    {"srcip", required_argument, NULL, 16},
-    {"dstip", required_argument, NULL, 17},
+    {"sip", required_argument, NULL, 16},
+    {"dip", required_argument, NULL, 17},
     {"protocol", required_argument, NULL, 18},
     {"tos", required_argument, NULL, 19},
     {"l3csum", required_argument, NULL, 20},
 
-    {"usrcport", required_argument, NULL, 21},
-    {"udstport", required_argument, NULL, 22},
+    {"usport", required_argument, NULL, 21},
+    {"udport", required_argument, NULL, 22},
 
-    {"tsrcport", required_argument, NULL, 23},
-    {"tdstport", required_argument, NULL, 24},
-    {"tsyn", required_argument, NULL, 25},
-    {"tack", required_argument, NULL, 26},
-    {"tpsh", required_argument, NULL, 27},
-    {"trst", required_argument, NULL, 28},
-    {"tfin", required_argument, NULL, 29},
-    {"turg", required_argument, NULL, 30},
-    {"tusesocket", required_argument, NULL, 31},
+    {"tsport", required_argument, NULL, 23},
+    {"tdport", required_argument, NULL, 24},
+    {"syn", required_argument, NULL, 25},
+    {"ack", required_argument, NULL, 26},
+    {"psh", required_argument, NULL, 27},
+    {"rst", required_argument, NULL, 28},
+    {"fin", required_argument, NULL, 29},
+    {"urg", required_argument, NULL, 30},
+    {"ece", required_argument, NULL, 41},
+    {"cwr", required_argument, NULL, 42},
+    {"usesocket", required_argument, NULL, 31},
     {"oneconnection", required_argument, NULL, 40},
 
     {"icode", required_argument, NULL, 38},
@@ -84,74 +86,79 @@ void parse_cli(struct cmd_line *cmd, struct config *cfg)
     }
 
     cfg->seq[0].block = cmd->cl_block;
-    cfg->seq[0].count = cmd->cl_count;
+    cfg->seq[0].max_count = cmd->cl_count;
     cfg->seq[0].time = cmd->cl_time;
     cfg->seq[0].delay = cmd->cl_delay;
     cfg->seq[0].track_count = cmd->cl_track_count;
     cfg->seq[0].max_data = cmd->cl_max_data;
     cfg->seq[0].threads = cmd->cl_threads;
-    cfg->seq[0].l4_csum = cmd->cl_l4_csum;
 
-    cfg->seq[0].eth.src_mac = cmd->cl_src_mac;
-    cfg->seq[0].eth.dst_mac = cmd->cl_dst_mac;
+    struct packet *pckt = &cfg->seq[0].pckts[0];
 
-    cfg->seq[0].ip.min_ttl = cmd->cl_ttl_min;
-    cfg->seq[0].ip.max_ttl = cmd->cl_ttl_max;
-    cfg->seq[0].ip.min_id = cmd->cl_id_min;
-    cfg->seq[0].ip.max_id = cmd->cl_id_max;
+    pckt->l4_csum = cmd->cl_l4_csum;
+
+    pckt->eth.src_mac = cmd->cl_src_mac;
+    pckt->eth.dst_mac = cmd->cl_dst_mac;
+
+    pckt->ip.min_ttl = cmd->cl_ttl_min;
+    pckt->ip.max_ttl = cmd->cl_ttl_max;
+    pckt->ip.min_id = cmd->cl_id_min;
+    pckt->ip.max_id = cmd->cl_id_max;
 
     if (cmd->cl_src_ip != NULL)
     {
         // Check for range.
         if (strstr(cmd->cl_src_ip, "/") != NULL)
         {
-            cfg->seq[0].ip.src_ip = 0;
-            cfg->seq[0].ip.range_count = 1;
-            cfg->seq[0].ip.ranges[0] = cmd->cl_src_ip;
+            pckt->ip.src_ip = 0;
+            pckt->ip.range_count = 1;
+            pckt->ip.ranges[0] = cmd->cl_src_ip;
         }
         else
         {
-            cfg->seq[0].ip.src_ip = cmd->cl_src_ip;
+            pckt->ip.src_ip = cmd->cl_src_ip;
         }
     }
 
     if (cmd->cl_dst_ip != NULL)
     {
-        cfg->seq[0].ip.dst_ip = cmd->cl_dst_ip;
+        pckt->ip.dst_ip = cmd->cl_dst_ip;
     }
 
-    cfg->seq[0].ip.protocol = cmd->cl_protocol;
-    cfg->seq[0].ip.tos = cmd->cl_tos;
-    cfg->seq[0].ip.csum = cmd->cl_l3_csum;
+    pckt->ip.protocol = cmd->cl_protocol;
+    pckt->ip.tos = cmd->cl_tos;
+    pckt->ip.csum = cmd->cl_l3_csum;
 
-    cfg->seq[0].udp.src_port = cmd->cl_udp_src_port;
-    cfg->seq[0].udp.dst_port = cmd->cl_udp_dst_port;
+    pckt->udp.src_port = cmd->cl_udp_src_port;
+    pckt->udp.dst_port = cmd->cl_udp_dst_port;
 
-    cfg->seq[0].tcp.src_port = cmd->cl_tcp_src_port;
-    cfg->seq[0].tcp.dst_port = cmd->cl_tcp_dst_port;
-    cfg->seq[0].tcp.syn = cmd->cl_tcp_syn;
-    cfg->seq[0].tcp.ack = cmd->cl_tcp_ack;
-    cfg->seq[0].tcp.psh = cmd->cl_tcp_psh;
-    cfg->seq[0].tcp.rst = cmd->cl_tcp_rst;
-    cfg->seq[0].tcp.fin = cmd->cl_tcp_fin;
-    cfg->seq[0].tcp.urg = cmd->cl_tcp_urg;
-    cfg->seq[0].tcp.use_socket = cmd->cl_tcp_use_socket;
-    cfg->seq[0].tcp.one_connection = cmd->cl_tcp_one_connection;
+    pckt->tcp.src_port = cmd->cl_tcp_src_port;
+    pckt->tcp.dst_port = cmd->cl_tcp_dst_port;
+    pckt->tcp.syn = cmd->cl_tcp_syn;
+    pckt->tcp.ack = cmd->cl_tcp_ack;
+    pckt->tcp.psh = cmd->cl_tcp_psh;
+    pckt->tcp.rst = cmd->cl_tcp_rst;
+    pckt->tcp.fin = cmd->cl_tcp_fin;
+    pckt->tcp.urg = cmd->cl_tcp_urg;
+    pckt->tcp.ece = cmd->cl_tcp_ece;
+    pckt->tcp.cwr = cmd->cl_tcp_cwr;
+    pckt->tcp.cooked = cmd->cl_tcp_cooked;
+    pckt->tcp.one_connection = cmd->cl_tcp_one_connection;
 
-    cfg->seq[0].icmp.code = cmd->cl_icmp_code;
-    cfg->seq[0].icmp.type = cmd->cl_icmp_type;
+    pckt->icmp.code = cmd->cl_icmp_code;
+    pckt->icmp.type = cmd->cl_icmp_type;
 
-    cfg->seq[0].pl.min_len = cmd->cl_pl_min_len;
-    cfg->seq[0].pl.max_len = cmd->cl_pl_max_len;
-    cfg->seq[0].pl.is_static = cmd->cl_pl_is_static;
+    pckt->pl.min_len = cmd->cl_pl_min_len;
+    pckt->pl.max_len = cmd->cl_pl_max_len;
+    pckt->pl.is_static = cmd->cl_pl_is_static;
 
     if (cmd->cl_pl_exact != NULL)
     {
-        cfg->seq[0].pl.exact = cmd->cl_pl_exact;
+        pckt->pl.exact = cmd->cl_pl_exact;
     }
 
-    cfg->seq[0].pl.is_file = cmd->cl_pl_is_file;
-    cfg->seq[0].pl.is_string = cmd->cl_pl_is_string;
+    pckt->pl.is_file = cmd->cl_pl_is_file;
+    pckt->pl.is_string = cmd->cl_pl_is_string;
 }
 
 /**
@@ -345,7 +352,7 @@ void parse_cmd_line(int argc, char **argv, struct cmd_line *cmd)
                 break;
 
             case 31:
-                cmd->cl_tcp_use_socket = atoi(optarg);
+                cmd->cl_tcp_cooked = atoi(optarg);
 
                 break;
 
@@ -391,6 +398,16 @@ void parse_cmd_line(int argc, char **argv, struct cmd_line *cmd)
 
             case 40:
                 cmd->cl_tcp_one_connection = atoi(optarg);
+
+                break;
+
+            case 41:
+                cmd->cl_tcp_ece = atoi(optarg);
+
+                break;
+
+            case 42:
+                cmd->cl_tcp_cwr = atoi(optarg);
 
                 break;
 

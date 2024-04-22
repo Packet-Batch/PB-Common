@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <linux/types.h>
 
-#include <yaml.h>
+#include <json-c/json.h>
 
 #include "config.h"
 #include "utils.h"
@@ -20,607 +20,403 @@
  * @return Returns 0 on success and -1 on failure.
 **/
 int parse_config(const char file_name[], struct config *cfg, int only_seq, int *seq_num, __u8 log)
-{
-    // Attempt to open config file.
-    FILE *fp = fopen(file_name, "r");
+{    
+    // Attempt to open config file with JSON.
+    json_object *root = json_object_from_file(file_name);
 
-    // Check if file pointer is valid.
-    if (fp == NULL)
+    if (root == NULL)
     {
-        if (log)
-        {
-            fprintf(stderr, "Error opening YAML config file (%s) :: %s.\n", file_name, strerror(errno));
-        }
+        fprintf(stderr, "Failed to open config file '%s'.\n", file_name);
 
-        return -1;
+        return 1;
     }
 
-    // Create YAML variables.
-    yaml_parser_t parser;
-    yaml_event_t ev;
+    json_object *tmp_obj;
 
-    // Initialize parser.
-    if (!yaml_parser_initialize(&parser))
+    // Parse global interface.
+    if (json_object_object_get_ex(root, "interface", &tmp_obj))
     {
-        if (log)
-        {
-            fprintf(stderr, "Error initializing YAML parser (#%d) :: %s.\n", parser.error, strerror(errno));
-        }
-
-        return -1;
+        cfg->interface = (char *) json_object_get_string(tmp_obj);
     }
 
-    // Set parser's input file.
-    yaml_parser_set_input_file(&parser, fp);
+    // Parse sequences array.
+    struct json_object *j_sequences;
 
-    // General YAML.
-    char *prev_key = NULL;
-    //char *prevsec;
-
-    // Sequences.
-    int in_sequence = 0;
-    int in_sequences = 0;
-    char *cur_seq;
-
-    // Sequence-specific.
-    int in_includes = 0;
-    int in_eth = 0;
-    int in_ip = 0;
-    int in_udp = 0;
-    int in_tcp = 0;
-    int in_icmp = 0;
-    int in_payload = 0;
-
-    // Additional IP.
-    int in_ttl = 0;
-    int in_ranges = 0;
-    int in_id = 0;
-    
-    // Additional pl.
-    int in_length = 0;
-    
-    do
+    if (!json_object_object_get_ex(root, "sequences", &j_sequences))
     {
-        // Keep scanning.
-        if (!yaml_parser_parse(&parser, &ev))
+        fprintf(stderr, "Failed to open sequences array.\n");
+
+        return 1;
+    }
+
+    // Check length of sequences.
+    int seq_len = json_object_array_length(j_sequences);
+
+    if (seq_len > 0)
+    {
+        // Loop through each sequence.
+        for (int i = 0; i < seq_len; i++)
         {
-            if (log)
+            // Retrieve current sequence.
+            struct sequence *seq = &cfg->seq[i];
+
+            // Get sequence JSON object.
+            json_object *seq_obj = json_object_array_get_idx(j_sequences, i);
+
+            // Retrieve interface.
+            if (json_object_object_get_ex(seq_obj, "interface", &tmp_obj))
             {
-                fprintf(stderr, "Error parsing YAML file (#%d) :: %s.\n", parser.error, strerror(errno));
+                seq->interface = (char *) json_object_get_string(tmp_obj);
             }
 
-            return -1;
+            // Retrieve block.
+            if (json_object_object_get_ex(seq_obj, "block", &tmp_obj))
+            {
+                seq->block = json_object_get_boolean(tmp_obj);
+            }
+
+            // Retrieve max count.
+            if (json_object_object_get_ex(seq_obj, "maxcount", &tmp_obj))
+            {
+                seq->max_count = json_object_get_uint64(tmp_obj);
+            }
+
+            // Retrieve max data.
+            if (json_object_object_get_ex(seq_obj, "maxdata", &tmp_obj))
+            {
+                seq->max_data = json_object_get_uint64(tmp_obj);
+            }
+
+            // Retrieve time
+            if (json_object_object_get_ex(seq_obj, "time", &tmp_obj))
+            {
+                seq->time = json_object_get_int(tmp_obj);
+            }
+
+            // Retrieve threads.
+            if (json_object_object_get_ex(seq_obj, "threads", &tmp_obj))
+            {
+                seq->threads = json_object_get_int(tmp_obj);
+            }
+
+            // Retrieve delay.
+            if (json_object_object_get_ex(seq_obj, "delay", &tmp_obj))
+            {
+                seq->delay = json_object_get_uint64(tmp_obj);
+            }
+
+            // Retrieve track count.
+            if (json_object_object_get_ex(seq_obj, "trackcount", &tmp_obj))
+            {
+                seq->track_count = json_object_get_boolean(tmp_obj);
+            }
+
+            // Retrieve packets.
+            json_object *pckts_obj;
+
+            if (!json_object_object_get_ex(seq_obj, "packets", &pckts_obj))
+            {
+                continue;
+            }
+
+            int pckts_len = json_object_array_length(pckts_obj);
+
+            if (pckts_len < 1)
+            {
+                continue;
+            }
+
+            for (int j = 0; j < pckts_len; j++)
+            {
+                struct packet *pckt = &seq->pckts[j];
+
+                struct json_object *pckt_obj = json_object_array_get_idx(pckts_obj, j);
+
+                // Retrieve layer-4 checksum.
+                if (json_object_object_get_ex(pckt_obj, "l4csum", &tmp_obj))
+                {
+                    pckt->l4_csum = json_object_get_boolean(tmp_obj);
+                }
+
+                // Retrieve ethernet object.
+                struct json_object *eth_obj;
+
+                if (json_object_object_get_ex(pckt_obj, "eth", &eth_obj))
+                {
+                    // Source MAC address.
+                    if (json_object_object_get_ex(eth_obj, "smac", &tmp_obj))
+                    {
+                        pckt->eth.src_mac = (char *) json_object_get_string(tmp_obj);
+                    }
+
+                    // Destination MAC address.
+                    if (json_object_object_get_ex(eth_obj, "dmac", &tmp_obj))
+                    {
+                        pckt->eth.dst_mac = (char *) json_object_get_string(tmp_obj);
+                    }
+                }
+
+                // Retrieve IP object.
+                struct json_object *ip_obj;
+
+                if (json_object_object_get_ex(pckt_obj, "ip", &ip_obj))
+                {
+                    // Source IP.
+                    if (json_object_object_get_ex(ip_obj, "srcip", &tmp_obj))
+                    {
+                        pckt->ip.src_ip = (char *) json_object_get_string(tmp_obj);
+                    }
+
+                    // Destination IP.
+                    if (json_object_object_get_ex(ip_obj, "dstip", &tmp_obj))
+                    {
+                        pckt->ip.dst_ip = (char *) json_object_get_string(tmp_obj);
+                    }
+
+                    // Protocol.
+                    if (json_object_object_get_ex(ip_obj, "protocol", &tmp_obj))
+                    {
+                        pckt->ip.protocol = (char *) json_object_get_string(tmp_obj);
+                    }
+
+                    // ToS.
+                    if (json_object_object_get_ex(ip_obj, "tos", &tmp_obj))
+                    {
+                        pckt->ip.tos = json_object_get_int(tmp_obj);
+                    }
+
+                    // Checksum.
+                    if (json_object_object_get_ex(ip_obj, "csum", &tmp_obj))
+                    {
+                        pckt->ip.csum = json_object_get_boolean(tmp_obj);
+                    }
+
+                    // TTL object.
+                    struct json_object *ttl_obj;
+
+                    if (json_object_object_get_ex(ip_obj, "ttl", &ttl_obj))
+                    {
+                        // Minimum TTL.
+                        if (json_object_object_get_ex(ttl_obj, "min", &tmp_obj))
+                        {
+                            pckt->ip.min_ttl = json_object_get_int(tmp_obj);
+                        }
+
+                        // Maximum TTL.
+                        if (json_object_object_get_ex(ttl_obj, "max", &tmp_obj))
+                        {
+                            pckt->ip.max_ttl = json_object_get_int(tmp_obj);
+                        }
+                    }
+
+                    // ID object.
+                    struct json_object *id_obj;
+
+                    if (json_object_object_get_ex(ip_obj, "id", &id_obj))
+                    {
+                        // Minimum ID.
+                        if (json_object_object_get_ex(id_obj, "min", &tmp_obj))
+                        {
+                            pckt->ip.min_id = json_object_get_int(tmp_obj);
+                        }
+
+                        // Maximum ID.
+                        if (json_object_object_get_ex(id_obj, "max", &tmp_obj))
+                        {
+                            pckt->ip.max_id = json_object_get_int(tmp_obj);
+                        }
+                    }
+
+                    // Ranges array.
+                    struct json_object *ranges_obj;
+
+                    if (json_object_object_get_ex(ip_obj, "ranges", &ranges_obj))
+                    {
+                        int ranges_len = json_object_array_length(ranges_obj);
+
+                        if (ranges_len > 0)
+                        {
+                            for (int n = 0; n < ranges_len; n++)
+                            {
+                                // Retrieve specific range and add to ranges array.
+                                struct json_object *range_obj = json_object_array_get_idx(ranges_obj, n);
+
+                                pckt->ip.ranges[n] = (char *) json_object_get_string(range_obj);
+                                pckt->ip.range_count++;
+                            }
+                        }
+                    }
+                }
+
+                // UDP object.
+                struct json_object *udp_obj;
+
+                if (json_object_object_get_ex(pckt_obj, "udp", &udp_obj))
+                {
+                    // Source port.
+                    if (json_object_object_get_ex(udp_obj, "srcport", &tmp_obj))
+                    {
+                        pckt->udp.src_port = json_object_get_int(tmp_obj);
+                    }
+
+                    // Destination port.
+                    if (json_object_object_get_ex(udp_obj, "dstport", &tmp_obj))
+                    {
+                        pckt->udp.dst_port = json_object_get_int(tmp_obj);
+                    }
+                }
+
+                // TCP object.
+                struct json_object *tcp_obj;
+
+                if (json_object_object_get_ex(pckt_obj, "tcp", &tcp_obj))
+                {
+                    // Cooked socket.
+                    if (json_object_object_get_ex(tcp_obj, "cooked", &tmp_obj))
+                    {
+                        pckt->tcp.cooked = json_object_get_boolean(tmp_obj);
+                    }
+
+                    // One connection.
+                    if (json_object_object_get_ex(tcp_obj, "oneconnection", &tmp_obj))
+                    {
+                        pckt->tcp.one_connection = json_object_get_boolean(tmp_obj);
+                    }
+
+                    // Source port.
+                    if (json_object_object_get_ex(tcp_obj, "srcport", &tmp_obj))
+                    {
+                        pckt->tcp.src_port = json_object_get_int(tmp_obj);
+                    }
+
+                    // Destination port.
+                    if (json_object_object_get_ex(tcp_obj, "dstport", &tmp_obj))
+                    {
+                        pckt->tcp.dst_port = json_object_get_int(tmp_obj);
+                    }
+
+                    // SYN flag.
+                    if (json_object_object_get_ex(tcp_obj, "syn", &tmp_obj))
+                    {
+                        pckt->tcp.syn = json_object_get_boolean(tmp_obj);
+                    }
+
+                    // PSH flag.
+                    if (json_object_object_get_ex(tcp_obj, "psh", &tmp_obj))
+                    {
+                        pckt->tcp.psh = json_object_get_boolean(tmp_obj);
+                    }
+
+                    // FIN flag.
+                    if (json_object_object_get_ex(tcp_obj, "fin", &tmp_obj))
+                    {
+                        pckt->tcp.fin = json_object_get_boolean(tmp_obj);
+                    }
+
+                    // ACK flag.
+                    if (json_object_object_get_ex(tcp_obj, "ack", &tmp_obj))
+                    {
+                        pckt->tcp.ack = json_object_get_boolean(tmp_obj);
+                    }
+
+                    // RST flag.
+                    if (json_object_object_get_ex(tcp_obj, "rst", &tmp_obj))
+                    {
+                        pckt->tcp.rst = json_object_get_boolean(tmp_obj);
+                    }
+
+                    // URG flag.
+                    if (json_object_object_get_ex(tcp_obj, "urg", &tmp_obj))
+                    {
+                        pckt->tcp.urg = json_object_get_boolean(tmp_obj);
+                    }
+
+                    // ECE flag.
+                    if (json_object_object_get_ex(tcp_obj, "ece", &tmp_obj))
+                    {
+                        pckt->tcp.ece = json_object_get_boolean(tmp_obj);
+                    }
+
+                    // CWR flag.
+                    if (json_object_object_get_ex(tcp_obj, "cwr", &tmp_obj))
+                    {
+                        pckt->tcp.cwr = json_object_get_boolean(tmp_obj);
+                    }
+                }
+
+                // ICMP object.
+                struct json_object *icmp_obj;
+
+                if (json_object_object_get_ex(pckt_obj, "icmp", &icmp_obj))
+                {
+                    // Code.
+                    if (json_object_object_get_ex(icmp_obj, "code", &tmp_obj))
+                    {
+                        pckt->icmp.code = json_object_get_int(tmp_obj);
+                    }
+
+                    // Type.
+                    if (json_object_object_get_ex(icmp_obj, "type", &tmp_obj))
+                    {
+                        pckt->icmp.type = json_object_get_int(tmp_obj);
+                    }
+                }
+
+                // Payload object.
+                struct json_object *pl_obj;
+
+                if (json_object_object_get_ex(pckt_obj, "payload", &pl_obj))
+                {
+                    // Is static.
+                    if (json_object_object_get_ex(pl_obj, "isstatic", &tmp_obj))
+                    {
+                        pckt->pl.is_static = json_object_get_boolean(tmp_obj);
+                    }
+
+                    // Is file.
+                    if (json_object_object_get_ex(pl_obj, "isfile", &tmp_obj))
+                    {
+                        pckt->pl.is_file = json_object_get_boolean(tmp_obj);
+                    }
+
+                    // Is string.
+                    if (json_object_object_get_ex(pl_obj, "isstring", &tmp_obj))
+                    {
+                        pckt->pl.is_string = json_object_get_boolean(tmp_obj);
+                    }
+
+                    // Exact.
+                    if (json_object_object_get_ex(pl_obj, "exact", &tmp_obj))
+                    {
+                        pckt->pl.exact = (char *) json_object_get_string(tmp_obj);
+                    }
+
+                    // Length object.
+                    struct json_object *len_obj;
+
+                    if (json_object_object_get_ex(pl_obj, "length", &len_obj))
+                    {
+                        // Minimum length.
+                        if (json_object_object_get_ex(len_obj, "min", &tmp_obj))
+                        {
+                            pckt->pl.min_len = json_object_get_int(tmp_obj);
+                        }
+
+                        // Maximum length.
+                        if (json_object_object_get_ex(len_obj, "max", &tmp_obj))
+                        {
+                            pckt->pl.max_len = json_object_get_int(tmp_obj);
+                        }
+                    }
+                }
+
+                seq->pckts_cnt++;
+
+            }
+
+            *seq_num += 1;
         }
-
-        switch (ev.type)
-        {
-            case YAML_MAPPING_START_EVENT:
-                // This occurs when we start a new mapping section. We want to check the previous key to see if it matches a mapping section we're expecting.
-                
-                // Check if we're already inside a sequence.
-                if (in_sequence)
-                {
-                    // Check if we're in an existing mapping within the sequence.
-                    if (in_ip)
-                    {
-                        // Now check if we're entering the TTL mapping.
-                        if (prev_key != NULL && !strcmp(prev_key, "ttl"))
-                        {
-                            in_ttl = 1;
-                        }
-                        // Check if we're entering the ID mapping.
-                        else if (prev_key != NULL && !strcmp(prev_key, "id"))
-                        {
-                            in_id = 1;
-                        }
-                    }
-
-                    if (in_payload)
-                    {
-                        if (prev_key != NULL && !strcmp(prev_key, "length"))
-                        {
-                            in_length = 1;
-                        }
-                    }
-
-                    // Check for additional mappings inside a single sequence.
-                    if (!in_eth && prev_key != NULL && !strcmp(prev_key, "eth"))
-                    {
-                        in_eth = 1;
-                    }
-
-                    if (!in_ip && prev_key != NULL && !strcmp(prev_key, "ip"))
-                    {
-                        in_ip = 1;
-                    }
-
-                    if (!in_udp && prev_key != NULL && !strcmp(prev_key, "udp"))
-                    {
-                        in_udp = 1;
-                    }
-
-                    if (!in_tcp && prev_key != NULL && !strcmp(prev_key, "tcp"))
-                    {
-                        in_tcp = 1;
-                    }
-
-                    if (!in_icmp && prev_key != NULL && !strcmp(prev_key, "icmp"))
-                    {
-                        in_icmp = 1;
-                    }
-
-                    if (!in_payload && prev_key != NULL && !strcmp(prev_key, "payload"))
-                    {
-                        in_payload = 1;
-                    }
-                }
-                
-
-                // Check for start of sequences.
-                if (in_sequences == 0 && prev_key != NULL && !strcmp(prev_key, "sequences"))
-                {
-                    // We're now inside of the sequences map.
-                    in_sequences = 1;
-                }
-                
-                // Check if we're inside sequences already, but not inside of a single sequence.
-                if (in_sequences && !in_sequence)
-                {
-                    // We're now entering a separate sequence.
-                    in_sequence = 1;
-
-                    cur_seq = strdup(prev_key);
-                }
-
-                break;
-            
-            case YAML_MAPPING_END_EVENT:
-                // Check if we're in inside of sequences.
-                if (in_sequences)
-                {
-                    // Check if we're inside a single sequence.
-                    if (in_sequence)
-                    {
-                        // Now go through each mapping inside of a single sequence and do additional checks.
-                        if (in_includes)
-                        {
-                            in_includes = 0;
-                        }
-                        else if (in_eth)
-                        {
-                            in_eth = 0;
-                        }
-                        else if (in_ip)
-                        {
-                            // Check for TTL mapping.
-                            if (in_ttl)
-                            {
-                                in_ttl = 0;
-                            }
-                            else if (in_id)
-                            {
-                                in_id = 0;
-                            }
-                            else
-                            {
-                                in_ip = 0;
-                            }
-                        }
-                        else if (in_udp)
-                        {
-                            in_udp = 0;
-                        }
-                        else if (in_tcp)
-                        {
-                            in_tcp = 0;
-                        }
-                        else if (in_icmp)
-                        {
-                            in_icmp = 0;
-                        }
-                        else if (in_payload)
-                        {
-                            // Check if we're in length mapping.
-                            if (in_length)
-                            {
-                                in_length = 0;
-                            }
-                            else
-                            {
-                                in_payload = 0;
-                            }
-                        }
-                        else
-                        {
-                            // Since everything else wasn't set, we should be exiting the sequence.
-                            in_sequence = 0;
-
-                            // Increase sequence count since the last one should have ended.
-                            (*seq_num)++;
-                        }
-                    }
-                    else
-                    {
-                        // We should be exiting sequences all together in this case.
-                        in_sequences = 0;
-                    }
-                }
-                
-                break;
-
-            case YAML_SEQUENCE_START_EVENT:
-                // Check for includes or ranges.
-                if (in_sequence)
-                {
-                    if (!in_includes && prev_key != NULL && !strcmp(prev_key, "includes"))
-                    {
-                        in_includes = 1;
-                    }
-
-                    if (!in_ranges && in_ip && prev_key != NULL && !strcmp(prev_key, "ranges"))
-                    {
-                        in_ranges = 1;
-                    }
-                }
-
-                break;
-
-            case YAML_SEQUENCE_END_EVENT:
-                // Check if we're exiting includes or ranges.
-                if (in_sequence && in_includes)
-                {
-                    in_includes = 0;
-                }
-
-                if (in_sequence && in_ip && in_ranges)
-                {
-                    in_ranges = 0;
-                }
-            
-                break;
-
-            case YAML_SCALAR_EVENT:
-                // We want to check keys and values within the scalar (typically `key: value`).
-
-                if (parser.state == YAML_PARSE_BLOCK_MAPPING_VALUE_STATE)
-                {
-                    // Assign prev_key to the value since this is representing a key.
-                    prev_key = strdup((const char *)ev.data.scalar.value);
-                }
-                else if (parser.state == YAML_PARSE_BLOCK_MAPPING_KEY_STATE || parser.state == YAML_PARSE_BLOCK_SEQUENCE_ENTRY_STATE)
-                {
-                    // Check if we're within a sequence or not.
-                    if (in_sequence)
-                    {
-                        // Check if we're within mappings inside the sequence.
-                        if (in_includes)
-                        {
-                            // Since we don't care about the key, just add onto the structure and increment the count.
-                            cfg->seq[*seq_num].includes[cfg->seq[*seq_num].include_count] = strdup((const char *)ev.data.scalar.value);
-
-                            // We're going to parse the include here. The 'includes' MUST be at the beginning of the sequence. Otherwise, it will overwrite the current sequence values.
-                            parse_config(cfg->seq[*seq_num].includes[cfg->seq[*seq_num].include_count], cfg, 1, seq_num, 1);
-
-                            // Increment count.
-                            cfg->seq[*seq_num].include_count++;
-                        }
-                        else if (in_eth)
-                        {
-                            // Check for source MAC.
-                            if (prev_key != NULL && !strcmp(prev_key, "srcmac"))
-                            {
-                                cfg->seq[*seq_num].eth.src_mac = strdup((const char *)ev.data.scalar.value);
-                            }
-
-                            // Check for destination MAC.
-                            if (prev_key != NULL && !strcmp(prev_key, "dstmac"))
-                            {
-                                cfg->seq[*seq_num].eth.dst_mac = strdup((const char *)ev.data.scalar.value);
-                            }
-                        }
-                        else if (in_ip)
-                        {
-                            // Check if we're within the TTL mapping.
-                            if (in_ttl)
-                            {
-                                // Check for min TTL.
-                                if (prev_key != NULL && !strcmp(prev_key, "min"))
-                                {
-                                    cfg->seq[*seq_num].ip.min_ttl = (__u8) atoi((const char *)ev.data.scalar.value);
-                                }
-
-                                // Check for max TTL.
-                                if (prev_key != NULL && !strcmp(prev_key, "max"))
-                                {
-                                    cfg->seq[*seq_num].ip.max_ttl = (__u8) atoi((const char *)ev.data.scalar.value);
-                                }
-                            }
-                            else if (in_id)
-                            {
-                                // Check for min ID.
-                                if (prev_key != NULL && !strcmp(prev_key, "min"))
-                                {
-                                    cfg->seq[*seq_num].ip.min_id = (__u16) atoi((const char *)ev.data.scalar.value);
-                                }
-
-                                // Check for max ID.
-                                if (prev_key != NULL && !strcmp(prev_key, "max"))
-                                {
-                                    cfg->seq[*seq_num].ip.max_id = (__u16) atoi((const char *)ev.data.scalar.value);
-                                }  
-                            }
-                            else if (in_ranges)
-                            {
-                                // Since we don't care about the key in ranges, simply add it and increase range count.
-                                cfg->seq[*seq_num].ip.ranges[cfg->seq[*seq_num].ip.range_count] = strdup((const char *)ev.data.scalar.value);
-
-                                cfg->seq[*seq_num].ip.range_count++;
-                            }
-                            else
-                            {
-                                // Look for all other IP options.
-
-                                // Check for source IP.
-                                if (prev_key != NULL && !strcmp(prev_key, "srcip"))
-                                {
-                                    cfg->seq[*seq_num].ip.src_ip = strdup((const char *)ev.data.scalar.value);
-                                }
-
-                                // Check for destination IP.
-                                if (prev_key != NULL && !strcmp(prev_key, "dstip"))
-                                {
-                                    cfg->seq[*seq_num].ip.dst_ip = strdup((const char *)ev.data.scalar.value);
-                                }
-
-                                // Check for protocol.
-                                if (prev_key != NULL && !strcmp(prev_key, "protocol"))
-                                {
-                                    cfg->seq[*seq_num].ip.protocol = strdup((const char *)ev.data.scalar.value);
-                                }
-
-                                // Check for TOS.
-                                if (prev_key != NULL && !strcmp(prev_key, "tos"))
-                                {
-                                    cfg->seq[*seq_num].ip.tos = (__u8) atoi((const char *)ev.data.scalar.value);
-                                }
-
-                                // Check for IP checksum calculation.
-                                if (prev_key != NULL && !strcmp(prev_key, "csum"))
-                                {
-                                    cfg->seq[*seq_num].ip.csum = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
-                                }
-                            }
-                        }
-                        else if (in_udp)
-                        {
-                            // Check for source port.
-                            if (prev_key != NULL && !strcmp(prev_key, "srcport"))
-                            {
-                                cfg->seq[*seq_num].udp.src_port = (__u16) atoi((const char *)ev.data.scalar.value);
-                            }
-
-                            // Check for destination port.
-                            if (prev_key != NULL && !strcmp(prev_key, "dstport"))
-                            {
-                                cfg->seq[*seq_num].udp.dst_port = (__u16) atoi((const char *)ev.data.scalar.value);
-                            }
-                        }
-                        else if (in_tcp)
-                        {
-                            // Check for source port.
-                            if (prev_key != NULL && !strcmp(prev_key, "srcport"))
-                            {
-                                cfg->seq[*seq_num].tcp.src_port = (__u16) atoi((const char *)ev.data.scalar.value);
-                            }
-
-                            // Check for destination port.
-                            if (prev_key != NULL && !strcmp(prev_key, "dstport"))
-                            {
-                                cfg->seq[*seq_num].tcp.dst_port = (__u16) atoi((const char *)ev.data.scalar.value);
-                            }
-
-                            // Check for SYN flag.
-                            if (prev_key != NULL && !strcmp(prev_key, "syn"))
-                            {
-                                cfg->seq[*seq_num].tcp.syn = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
-                            }
-
-                            // Check for ACK flag.
-                            if (prev_key != NULL && !strcmp(prev_key, "ack"))
-                            {
-                                cfg->seq[*seq_num].tcp.ack = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
-                            }
-
-                            // Check for PSH flag.
-                            if (prev_key != NULL && !strcmp(prev_key, "psh"))
-                            {
-                                cfg->seq[*seq_num].tcp.psh = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
-                            }
-
-                            // Check for RST flag.
-                            if (prev_key != NULL && !strcmp(prev_key, "rst"))
-                            {
-                                cfg->seq[*seq_num].tcp.rst = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
-                            }
-
-                            // Check for FIN flag.
-                            if (prev_key != NULL && !strcmp(prev_key, "fin"))
-                            {
-                                cfg->seq[*seq_num].tcp.fin = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
-                            }
-
-                            // Check for URG flag.
-                            if (prev_key != NULL && !strcmp(prev_key, "urg"))
-                            {
-                                cfg->seq[*seq_num].tcp.urg = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
-                            }
-
-                            // TCP cooked Linux socket.
-                            if (prev_key != NULL && !strcmp(prev_key, "usesocket"))
-                            {
-                                cfg->seq[*seq_num].tcp.use_socket = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
-                            }
-
-                            // One connection.
-                            if (prev_key != NULL && !strcmp(prev_key, "oneconnection"))
-                            {
-                                cfg->seq[*seq_num].tcp.one_connection = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
-                            }
-                        }
-                        else if (in_icmp)
-                        {
-                            // Check for code.
-                            if (prev_key != NULL && !strcmp(prev_key, "code"))
-                            {
-                                cfg->seq[*seq_num].icmp.code = (__u8) atoi((const char *)ev.data.scalar.value);
-                            }
-
-                            // Check for type.
-                            if (prev_key != NULL && !strcmp(prev_key, "type"))
-                            {
-                                cfg->seq[*seq_num].icmp.type = (__u8) atoi((const char *)ev.data.scalar.value);
-                            }
-                        }
-                        else if (in_payload)
-                        {
-                            // Check if we're inside the length mapping already.
-                            if (in_length)
-                            {
-                                // Check for min length.
-                                if (prev_key != NULL && !strcmp(prev_key, "min"))
-                                {
-                                    cfg->seq[*seq_num].pl.min_len = (__u16) atoi((const char *)ev.data.scalar.value);
-                                }
-
-                                // Check for max length.
-                                if (prev_key != NULL && !strcmp(prev_key, "max"))
-                                {
-                                    cfg->seq[*seq_num].pl.max_len = (__u16) atoi((const char *)ev.data.scalar.value);
-                                }
-                            }
-                            else
-                            {
-                                // Check for exact pl.
-                                if (prev_key != NULL && !strcmp(prev_key, "exact"))
-                                {
-                                    cfg->seq[*seq_num].pl.exact = strdup((const char *)ev.data.scalar.value);
-                                }
-
-                                // Check for static pl.
-                                if (prev_key != NULL && !strcmp(prev_key, "isstatic"))
-                                {
-                                    cfg->seq[*seq_num].pl.is_static = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
-                                }
-
-                                // Check if payload is file.
-                                if (prev_key != NULL && !strcmp(prev_key, "isfile"))
-                                {
-                                    cfg->seq[*seq_num].pl.is_file = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
-                                }
-
-                                // Check if payload is string.
-                                if (prev_key != NULL && !strcmp(prev_key, "isstring"))
-                                {
-                                    cfg->seq[*seq_num].pl.is_string = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // Check for other sequence key => values.
-
-                            // Check for interface override.
-                            if (prev_key != NULL && !strcmp(prev_key, "interface"))
-                            {
-                                cfg->seq[*seq_num].interface = strdup((const char *)ev.data.scalar.value);
-                            }
-
-                            // Check for block.
-                            if (prev_key != NULL && !strcmp(prev_key, "block"))
-                            {
-                                cfg->seq[*seq_num].block = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
-                            }
-
-                            // Check for count.
-                            if (prev_key != NULL && !strcmp(prev_key, "count"))
-                            {
-                                cfg->seq[*seq_num].count = strtoull((const char *)ev.data.scalar.value, (char **)ev.data.scalar.value, 0);
-                            }
-
-                            // Check for time.
-                            if (prev_key != NULL && !strcmp(prev_key, "time"))
-                            {
-                                cfg->seq[*seq_num].time = strtoull((const char *)ev.data.scalar.value, (char **)ev.data.scalar.value, 0);
-                            }
-
-                            // Check for time.
-                            if (prev_key != NULL && !strcmp(prev_key, "delay"))
-                            {
-                                cfg->seq[*seq_num].delay = strtoull((const char *)ev.data.scalar.value, (char **)ev.data.scalar.value, 0);
-                            }
-
-                            // Check for max data.
-                            if (prev_key != NULL && !strcmp(prev_key, "data"))
-                            {
-                                cfg->seq[*seq_num].max_data = strtoull((const char *)ev.data.scalar.value, (char **)ev.data.scalar.value, 0);
-                            }
-
-                            // Check for tracking count.
-                            if (prev_key != NULL && !strcmp(prev_key, "trackcount"))
-                            {
-                                cfg->seq[*seq_num].track_count = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
-                            }
-
-                            // Check for threads.
-                            if (prev_key != NULL && !strcmp(prev_key, "threads"))
-                            {
-                                cfg->seq[*seq_num].threads = atoi((const char *)ev.data.scalar.value);
-                            }
-
-                            // Check for layer 4 checksum.
-                            if (prev_key != NULL && !strcmp(prev_key, "l4csum"))
-                            {   
-                                cfg->seq[*seq_num].l4_csum = (!strcmp(lower_str((char *)ev.data.scalar.value), "true")) ? 1 : 0;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // If we're only parsing sequences, break.
-                        if (only_seq)
-                        {
-                            continue;
-                        }
-
-                        // We should be in the global scope. Check for things like the interface.
-                        if (prev_key != NULL && !strcmp(prev_key, "interface"))
-                        {
-                            cfg->interface = strdup((const char *)ev.data.scalar.value);
-                        }
-                    }
-                }
-
-                break;
-            
-            default:
-                break;
-        }
-
-        // Check for end of file.
-        if (ev.type != YAML_STREAM_END_EVENT)
-        {
-            yaml_event_delete(&ev);
-        }
-    } while (ev.type != YAML_STREAM_END_EVENT);
-
-    // Delete token if it isn't already.
-    yaml_event_delete(&ev);    
-
-    // Close the YAML parser.
-    yaml_parser_delete(&parser);
-
-    // Close config file.
-    fclose(fp);
+    }
 
     return 0;
 }
@@ -637,59 +433,66 @@ void clear_sequence(struct config *cfg, int seq_num)
 {
     cfg->seq[seq_num].interface = NULL;
     cfg->seq[seq_num].block = 1;
-    cfg->seq[seq_num].count = 0;
+    cfg->seq[seq_num].max_count = 0;
     cfg->seq[seq_num].threads = 0;
     cfg->seq[seq_num].time = 0;
     cfg->seq[seq_num].delay = 1000000;
 
-    cfg->seq[seq_num].eth.src_mac = NULL;
-    cfg->seq[seq_num].eth.dst_mac = NULL;
+    for (int i = 0; i < MAX_PACKETS; i++)
+    {
+        struct packet *pkt = &cfg->seq[seq_num].pckts[i];
 
-    cfg->seq[seq_num].ip.src_ip = NULL;
-    cfg->seq[seq_num].ip.dst_ip = NULL;
-    cfg->seq[seq_num].ip.protocol = NULL;
-    cfg->seq[seq_num].ip.tos = 0;
-    cfg->seq[seq_num].ip.min_ttl = 64;
-    cfg->seq[seq_num].ip.max_ttl = 64;
-    cfg->seq[seq_num].ip.min_id = 0;
-    cfg->seq[seq_num].ip.max_id = 64000;
-    cfg->seq[seq_num].ip.csum = 1;
+        pkt->eth.src_mac = NULL;
+        pkt->eth.dst_mac = NULL;
 
-    
-    cfg->seq[seq_num].udp.src_port = 0;
-    cfg->seq[seq_num].udp.dst_port = 0;
+        pkt->ip.src_ip = NULL;
+        pkt->ip.dst_ip = NULL;
+        pkt->ip.protocol = NULL;
+        pkt->ip.tos = 0;
+        pkt->ip.min_ttl = 64;
+        pkt->ip.max_ttl = 64;
+        pkt->ip.min_id = 0;
+        pkt->ip.max_id = 64000;
+        pkt->ip.csum = 1;
+        
+        pkt->udp.src_port = 0;
+        pkt->udp.dst_port = 0;
 
-    cfg->seq[seq_num].tcp.syn = 0;
-    cfg->seq[seq_num].tcp.ack = 0;
-    cfg->seq[seq_num].tcp.psh = 0;
-    cfg->seq[seq_num].tcp.rst = 0;
-    cfg->seq[seq_num].tcp.fin = 0;
-    cfg->seq[seq_num].tcp.urg = 0;
-    cfg->seq[seq_num].tcp.use_socket = 0;
-    cfg->seq[seq_num].tcp.one_connection = 0;
-    
-    cfg->seq[seq_num].icmp.code = 0;
-    cfg->seq[seq_num].icmp.type = 0;
+        pkt->tcp.syn = 0;
+        pkt->tcp.ack = 0;
+        pkt->tcp.psh = 0;
+        pkt->tcp.rst = 0;
+        pkt->tcp.fin = 0;
+        pkt->tcp.urg = 0;
+        pkt->tcp.cooked = 0;
+        pkt->tcp.one_connection = 0;
+        
+        pkt->icmp.code = 0;
+        pkt->icmp.type = 0;
 
-    cfg->seq[seq_num].l4_csum = 1;
+        pkt->l4_csum = 1;
 
-    cfg->seq[seq_num].pl.exact = NULL;
-    cfg->seq[seq_num].pl.is_file = 0;
-    cfg->seq[seq_num].pl.is_string = 0;
-    cfg->seq[seq_num].pl.is_static = 0;
-    cfg->seq[seq_num].pl.min_len = 0;
-    cfg->seq[seq_num].pl.max_len = 0;
+        pkt->pl.exact = NULL;
+        pkt->pl.is_file = 0;
+        pkt->pl.is_string = 0;
+        pkt->pl.is_static = 0;
+        pkt->pl.min_len = 0;
+        pkt->pl.max_len = 0;
+    }
 
     // Reset includes.
     for (int i = 0; i < cfg->seq[seq_num].include_count; i++)
     {
-        cfg->seq[seq_num].includes[cfg->seq[seq_num].include_count] = NULL;
+        cfg->seq[seq_num].includes[i] = NULL;
     }
 
     // Reset source ranges.
-    for (int i = 0; i < cfg->seq[seq_num].ip.range_count; i++)
+    for (int i = 0; i < MAX_PACKETS; i++)
     {
-        cfg->seq[seq_num].ip.ranges[cfg->seq[seq_num].ip.range_count] = NULL;
+        for (int j = 0; j < cfg->seq[seq_num].pckts[i].ip.range_count; j++)
+        {
+            cfg->seq[seq_num].pckts[i].ip.ranges[j] = NULL;
+        }
     }
 }
 
@@ -733,72 +536,86 @@ void print_config(struct config *cfg, int seq_cnt)
 
         fprintf(stdout, "\t\tInterface Override => %s\n", seq->interface ? seq->interface : "N/A");
         fprintf(stdout, "\t\tBlock => %s\n", seq->block ? "True" : "False");
-        fprintf(stdout, "\t\tCount => %llu\n", seq->count);
+        fprintf(stdout, "\t\tCount => %llu\n", seq->max_count);
         fprintf(stdout, "\t\tTime => %llu\n", seq->time);
         fprintf(stdout, "\t\tDelay => %llu\n", seq->delay);
         fprintf(stdout, "\t\tThreads => %u\n", seq->threads);
 
-        // Ethernet settings.
-        fprintf(stdout, "\tEthernet\n");
-        fprintf(stdout, "\t\tSource MAC => %s\n", seq->eth.src_mac ? seq->eth.src_mac : "N/A");
-        fprintf(stdout, "\t\tDestination MAC => %s\n", seq->eth.dst_mac ? seq->eth.dst_mac : "N/A");
+        // Packets.
+        fprintf(stdout, "\t\tPackets\n");
 
-        // IP settings.
-        fprintf(stdout, "\tIP\n");
-        fprintf(stdout, "\t\tProtocol => %s\n", seq->ip.protocol ? seq->ip.protocol : "N/A");
-
-        fprintf(stdout, "\t\tSource IP => %s\n", seq->ip.src_ip ? seq->ip.src_ip : "N/A");
-        fprintf(stdout, "\t\tDestination IP => %s\n", seq->ip.dst_ip ? seq->ip.dst_ip : "N/A");
-
-        if (seq->ip.range_count > 0)
+        for (int i = 0; i < seq->pckts_cnt; i++)
         {
-            for (int j = 0; j < seq->ip.range_count; j++)
-                fprintf(stdout, "\t\t\t- %s\n", seq->ip.ranges[j]);
+            fprintf(stdout, "\t\t\t#%d\n", i + 1);
+
+            struct packet *pckt = &seq->pckts[i];
+
+            // Ethernet settings.
+            fprintf(stdout, "\t\t\t\tEthernet\n");
+            fprintf(stdout, "\t\t\t\t\tSource MAC => %s\n", pckt->eth.src_mac ? pckt->eth.src_mac : "N/A");
+            fprintf(stdout, "\t\t\t\t\tDestination MAC => %s\n", pckt->eth.dst_mac ? pckt->eth.dst_mac : "N/A");
+
+            // IP settings.
+            fprintf(stdout, "\t\t\t\tIP\n");
+            fprintf(stdout, "\t\t\t\t\tProtocol => %s\n", pckt->ip.protocol ? pckt->ip.protocol : "N/A");
+
+            fprintf(stdout, "\t\t\t\t\tSource IP => %s\n", pckt->ip.src_ip ? pckt->ip.src_ip : "N/A");
+            fprintf(stdout, "\t\t\t\t\tDestination IP => %s\n", pckt->ip.dst_ip ? pckt->ip.dst_ip : "N/A");
+
+            if (pckt->ip.range_count > 0)
+            {
+                fprintf(stdout, "\t\t\t\t\tRanges:\n");
+
+                for (int j = 0; j < pckt->ip.range_count; j++)
+                {
+                    fprintf(stdout, "\t\t\t\t\t\t- %s\n", pckt->ip.ranges[j]);
+                }
+            }
+
+            fprintf(stdout, "\t\t\t\t\tType of Service => %d\n", pckt->ip.tos);
+            fprintf(stdout, "\t\t\t\t\tMin TTL => %d\n", pckt->ip.min_ttl);
+            fprintf(stdout, "\t\t\t\t\tMax TTL => %d\n", pckt->ip.max_ttl);
+            fprintf(stdout, "\t\t\t\t\tMin ID => %d\n", pckt->ip.min_id);
+            fprintf(stdout, "\t\t\t\t\tMax ID => %d\n", pckt->ip.max_id);
+            fprintf(stdout, "\t\t\t\t\tChecksum => %s\n", pckt->ip.csum ? "Yes" : "No");
+
+            // TCP settings.
+            fprintf(stdout, "\t\t\t\tTCP\n");
+            fprintf(stdout, "\t\t\t\t\tSource Port => %d\n", pckt->tcp.src_port);
+            fprintf(stdout, "\t\t\t\t\tDest Port => %d\n", pckt->tcp.dst_port);
+            fprintf(stdout, "\t\t\t\t\tUse Socket => %s\n", pckt->tcp.cooked ? "Yes" : "No");
+            fprintf(stdout, "\t\t\t\t\tOne Connection => %s\n", pckt->tcp.one_connection ? "Yes" : "No");
+            fprintf(stdout, "\t\t\t\t\tSYN Flag => %s\n", pckt->tcp.syn ? "Yes": "No");
+            fprintf(stdout, "\t\t\t\t\tPSH Flag => %s\n", pckt->tcp.psh ? "Yes" : "No");
+            fprintf(stdout, "\t\t\t\t\tFIN Flag => %s\n", pckt->tcp.fin ? "Yes" : "No");
+            fprintf(stdout, "\t\t\t\t\tACK Flag => %s\n", pckt->tcp.ack ? "Yes" : "No");
+            fprintf(stdout, "\t\t\t\t\tRST Flag => %s\n", pckt->tcp.rst ? "Yes" : "No");
+            fprintf(stdout, "\t\t\t\t\tURG Flag => %s\n", pckt->tcp.urg ? "Yes" : "No");
+
+            // UDP settings.
+            fprintf(stdout, "\t\t\t\tUDP\n");
+            fprintf(stdout, "\t\t\t\t\tSrc Port => %d\n", pckt->udp.src_port);
+            fprintf(stdout, "\t\t\t\t\tDst Port => %d\n", pckt->udp.dst_port);
+
+            // ICMP settings.
+            fprintf(stdout, "\t\t\t\tICMP\n");
+            fprintf(stdout, "\t\t\t\t\tCode => %d\n", pckt->icmp.code);
+            fprintf(stdout, "\t\t\t\t\tType => %d\n", pckt->icmp.type);
+
+            // Layer 4 setting(s).
+            fprintf(stdout, "\t\t\t\tLayer 4\n");
+            fprintf(stdout, "\t\t\t\t\tChecksum => %s\n", pckt->l4_csum ? "Yes" : "No");
+
+            // Payload settings.
+            fprintf(stdout, "\t\t\t\tPayload\n");
+            fprintf(stdout, "\t\t\t\t\tMin Length => %d\n", pckt->pl.min_len);
+            fprintf(stdout, "\t\t\t\t\tMax Length => %d\n", pckt->pl.max_len);
+            fprintf(stdout, "\t\t\t\t\tIs Static => %s\n", pckt->pl.is_static ? "Yes" : "No");
+            fprintf(stdout, "\t\t\t\t\tIs File => %s\n", pckt->pl.is_file ? "Yes" : "No");
+            fprintf(stdout, "\t\t\t\t\tIs String => %s\n", pckt->pl.is_string ? "Yes" : "No");
+            fprintf(stdout, "\t\t\t\t\tExact String => %s\n", pckt->pl.exact ? pckt->pl.exact : "N/A");
+
+            fprintf(stdout, "\n\n");
         }
-
-        fprintf(stdout, "\t\tType of Service => %d\n", seq->ip.tos);
-        fprintf(stdout, "\t\tMin TTL => %d\n", seq->ip.min_ttl);
-        fprintf(stdout, "\t\tMax TTL => %d\n", seq->ip.max_ttl);
-        fprintf(stdout, "\t\tMin ID => %d\n", seq->ip.min_id);
-        fprintf(stdout, "\t\tMax ID => %d\n", seq->ip.max_id);
-        fprintf(stdout, "\t\tChecksum => %s\n", seq->ip.csum ? "Yes" : "No");
-
-        // TCP settings.
-        fprintf(stdout, "\tTCP\n");
-        fprintf(stdout, "\t\tSource Port => %d\n", seq->tcp.src_port);
-        fprintf(stdout, "\t\tDest Port => %d\n", seq->tcp.dst_port);
-        fprintf(stdout, "\t\tUse Socket => %s\n", seq->tcp.use_socket ? "Yes" : "No");
-        fprintf(stdout, "\t\tOne Connection => %s\n", seq->tcp.one_connection ? "Yes" : "No");
-        fprintf(stdout, "\t\tSYN Flag => %s\n", seq->tcp.syn ? "Yes": "No");
-        fprintf(stdout, "\t\tPSH Flag => %s\n", seq->tcp.psh ? "Yes" : "No");
-        fprintf(stdout, "\t\tFIN Flag => %s\n", seq->tcp.fin ? "Yes" : "No");
-        fprintf(stdout, "\t\tACK Flag => %s\n", seq->tcp.ack ? "Yes" : "No");
-        fprintf(stdout, "\t\tRST Flag => %s\n", seq->tcp.rst ? "Yes" : "No");
-        fprintf(stdout, "\t\tURG Flag => %s\n", seq->tcp.urg ? "Yes" : "No");
-
-        // UDP settings.
-        fprintf(stdout, "\tUDP\n");
-        fprintf(stdout, "\t\tSrc Port => %d\n", seq->udp.src_port);
-        fprintf(stdout, "\t\tDst Port => %d\n", seq->udp.dst_port);
-
-        // ICMP settings.
-        fprintf(stdout, "\tICMP\n");
-        fprintf(stdout, "\t\tCode => %d\n", seq->icmp.code);
-        fprintf(stdout, "\t\tType => %d\n", seq->icmp.type);
-
-        // Layer 4 setting(s).
-        fprintf(stdout, "\tLayer 4\n");
-        fprintf(stdout, "\t\tChecksum => %s\n", seq->l4_csum ? "Yes" : "No");
-
-        // Payload settings.
-        fprintf(stdout, "\tPayload\n");
-        fprintf(stdout, "\t\tMin Length => %d\n", seq->pl.min_len);
-        fprintf(stdout, "\t\tMax Length => %d\n", seq->pl.max_len);
-        fprintf(stdout, "\t\tIs Static => %s\n", seq->pl.is_static ? "Yes" : "No");
-        fprintf(stdout, "\t\tIs File => %s\n", seq->pl.is_file ? "Yes" : "No");
-        fprintf(stdout, "\t\tIs String => %s\n", seq->pl.is_string ? "Yes" : "No");
-        fprintf(stdout, "\t\tExact String => %s\n", seq->pl.exact ? seq->pl.exact : "N/A");
-
-        fprintf(stdout, "\n\n");
     }
 }

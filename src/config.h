@@ -7,6 +7,8 @@
 #define MAX_SEQUENCES 256
 #define MAX_RANGES 64
 
+#define MAX_PACKETS 256
+
 struct eth_opt
 {
     char *src_mac;
@@ -51,8 +53,10 @@ struct tcp_opt
     unsigned int ack : 1;
     unsigned int rst : 1;
     unsigned int urg : 1;
+    unsigned int ece : 1;
+    unsigned int cwr : 1;
 
-    unsigned int use_socket : 1;
+    unsigned int cooked : 1;
     unsigned int one_connection : 1;
 };
 
@@ -78,20 +82,8 @@ struct payload_opt
     char *exact;
 };
 
-struct sequence
+struct packet
 {
-    // General options.
-    char *interface;
-    unsigned int block : 1;
-    __u64 count;
-    __u64 time;
-    __u64 delay;
-    __u64 max_data;
-    __u16 threads;
-    char *includes[MAX_INCLUDES];
-    __u16 include_count;
-    unsigned int track_count : 1;
-
     // Ethernet options.
     struct eth_opt eth;
 
@@ -106,6 +98,24 @@ struct sequence
 
     // Payload options.
     struct payload_opt pl;
+};
+
+struct sequence
+{
+    // General options.
+    char *interface;
+    unsigned int block : 1;
+    __u64 max_count;
+    __u64 time;
+    __u64 delay;
+    __u64 max_data;
+    __u16 threads;
+    char *includes[MAX_INCLUDES];
+    __u16 include_count;
+    unsigned int track_count : 1;
+
+    int pckts_cnt; 
+    struct packet pckts[MAX_PACKETS];
 };
 
 struct config

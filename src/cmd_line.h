@@ -46,7 +46,9 @@ struct cmd_line
     unsigned int cl_tcp_rst : 1;
     unsigned int cl_tcp_fin : 1;
     unsigned int cl_tcp_urg : 1;
-    unsigned int cl_tcp_use_socket : 1;
+    unsigned int cl_tcp_ece : 1;
+    unsigned int cl_tcp_cwr : 1;
+    unsigned int cl_tcp_cooked : 1;
     unsigned int cl_tcp_one_connection : 1;
 
     __u8 cl_icmp_code : 1;
