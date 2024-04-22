@@ -76,13 +76,13 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
             }
 
             // Retrieve max count.
-            if (json_object_object_get_ex(seq_obj, "maxcount", &tmp_obj))
+            if (json_object_object_get_ex(seq_obj, "count", &tmp_obj))
             {
                 seq->max_count = json_object_get_uint64(tmp_obj);
             }
 
             // Retrieve max data.
-            if (json_object_object_get_ex(seq_obj, "maxdata", &tmp_obj))
+            if (json_object_object_get_ex(seq_obj, "data", &tmp_obj))
             {
                 seq->max_data = json_object_get_uint64(tmp_obj);
             }
@@ -141,13 +141,13 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
             if (json_object_object_get_ex(seq_obj, "ip", &ip_obj))
             {
                 // Source IP.
-                if (json_object_object_get_ex(ip_obj, "srcip", &tmp_obj))
+                if (json_object_object_get_ex(ip_obj, "sip", &tmp_obj))
                 {
                     seq->ip.src_ip = (char *) json_object_get_string(tmp_obj);
                 }
 
                 // Destination IP.
-                if (json_object_object_get_ex(ip_obj, "dstip", &tmp_obj))
+                if (json_object_object_get_ex(ip_obj, "dip", &tmp_obj))
                 {
                     seq->ip.dst_ip = (char *) json_object_get_string(tmp_obj);
                 }
@@ -233,13 +233,13 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
             if (json_object_object_get_ex(seq_obj, "udp", &udp_obj))
             {
                 // Source port.
-                if (json_object_object_get_ex(udp_obj, "srcport", &tmp_obj))
+                if (json_object_object_get_ex(udp_obj, "sport", &tmp_obj))
                 {
                     seq->udp.src_port = json_object_get_int(tmp_obj);
                 }
 
                 // Destination port.
-                if (json_object_object_get_ex(udp_obj, "dstport", &tmp_obj))
+                if (json_object_object_get_ex(udp_obj, "dport", &tmp_obj))
                 {
                     seq->udp.dst_port = json_object_get_int(tmp_obj);
                 }
@@ -257,19 +257,19 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
                 }
 
                 // One connection.
-                if (json_object_object_get_ex(tcp_obj, "oneconnection", &tmp_obj))
+                if (json_object_object_get_ex(tcp_obj, "oneconn", &tmp_obj))
                 {
                     seq->tcp.one_connection = json_object_get_boolean(tmp_obj);
                 }
 
                 // Source port.
-                if (json_object_object_get_ex(tcp_obj, "srcport", &tmp_obj))
+                if (json_object_object_get_ex(tcp_obj, "sport", &tmp_obj))
                 {
                     seq->tcp.src_port = json_object_get_int(tmp_obj);
                 }
 
                 // Destination port.
-                if (json_object_object_get_ex(tcp_obj, "dstport", &tmp_obj))
+                if (json_object_object_get_ex(tcp_obj, "dport", &tmp_obj))
                 {
                     seq->tcp.dst_port = json_object_get_int(tmp_obj);
                 }
