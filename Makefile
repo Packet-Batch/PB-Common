@@ -61,6 +61,7 @@ config: mk_build
 
 custom_tests:
 	$(CC) -O2 -g -I src/ $(shell $(PKG_CONF) --libs json-c) $(BUILD_DIR)/$(CMD_LINE_OUT) $(BUILD_DIR)/$(CONFIG_OUT) -o $(BUILD_DIR)/test_cfg_print $(TESTS_DIR)/cfg_print.c
+	$(CC) -O2 -g -I src/ $(shell $(PKG_CONF) --libs json-c) $(BUILD_DIR)/$(CMD_LINE_OUT) $(BUILD_DIR)/$(CONFIG_OUT) -o $(BUILD_DIR)/test_cmd_help $(TESTS_DIR)/cmd_help.c
 
 # Install (copy base config file if it doesn't already exist).
 install:
