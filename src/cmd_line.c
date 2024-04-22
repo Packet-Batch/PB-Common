@@ -145,13 +145,13 @@ void print_cmd_help()
 **/
 void parse_cli(struct cmd_line *cmd, struct config *cfg)
 {
-    /* Parse main options. */
+    struct sequence *seq = &cfg->seq[0];
+
     if (cmd->cl_interface != NULL)
     {
         cfg->interface = cmd->cl_interface;
+        seq->interface = cmd->cl_interface;
     }
-
-    struct sequence *seq = &cfg->seq[0];
 
     seq->block = cmd->cl_block;
     seq->max_count = cmd->cl_count;
