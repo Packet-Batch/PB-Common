@@ -9,8 +9,8 @@
                 "/etc/pcktbatch/include_two.yaml"
             ],
             "block": true,
-            "maxcount": 0,
-            "maxdata": 0,
+            "count": 0,
+            "data": 0,
             "time": 0,
             "threads": 0,
             "delay": 1000000,
@@ -29,8 +29,8 @@
                     "10.60.0.0/24",
                     "192.168.30.0/24"
                 ],
-                "srcip": null,
-                "dstip": null,
+                "sip": null,
+                "dip": null,
                 "protocol": "udp",
                 "tos": 0,
                 "csum": true,
@@ -47,13 +47,13 @@
             },
             "udp":
             {
-                "srcport": 0,
-                "dstport": 0
+                "sport": 0,
+                "dport": 0
             },
             "tcp":
             {
-                "srcport": 0,
-                "dstport": 0,
+                "sport": 0,
+                "dport": 0,
                 "syn": false,
                 "ack": false,
                 "psh": false,
