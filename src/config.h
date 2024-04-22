@@ -7,7 +7,7 @@
 #define MAX_SEQUENCES 256
 #define MAX_RANGES 64
 
-#define MAX_PACKETS 256
+#define MAX_PAYLOADS 256
 
 struct eth_opt
 {
@@ -82,24 +82,6 @@ struct payload_opt
     char *exact;
 };
 
-struct packet
-{
-    // Ethernet options.
-    struct eth_opt eth;
-
-    // IP options.
-    struct ip_opt ip;
-
-    // Layer 4 options.
-    struct tcp_opt tcp;
-    struct udp_opt udp;
-    struct icmp_opt icmp;
-    unsigned int l4_csum : 1;
-
-    // Payload options.
-    struct payload_opt pl;
-};
-
 struct sequence
 {
     // General options.
@@ -114,8 +96,21 @@ struct sequence
     __u16 include_count;
     unsigned int track_count : 1;
 
-    int pckts_cnt; 
-    struct packet pckts[MAX_PACKETS];
+    // Ethernet options.
+    struct eth_opt eth;
+
+    // IP options.
+    struct ip_opt ip;
+
+    // Layer 4 options.
+    struct tcp_opt tcp;
+    struct udp_opt udp;
+    struct icmp_opt icmp;
+    unsigned int l4_csum : 1;
+
+    // Payload options.
+    int pl_cnt;
+    struct payload_opt pls[MAX_PAYLOADS];
 };
 
 struct config

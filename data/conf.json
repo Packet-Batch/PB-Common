@@ -15,74 +15,75 @@
             "threads": 0,
             "delay": 1000000,
             "trackcount": false,
-            "packets":
+            "l4csum": true,
+            "eth":
+            {
+                "smac": null,
+                "dmac": null
+            },
+            "ip":
+            {
+                "ranges":
+                [
+                    "172.16.0.0./16",
+                    "10.60.0.0/24",
+                    "192.168.30.0/24"
+                ],
+                "srcip": null,
+                "dstip": null,
+                "protocol": "udp",
+                "tos": 0,
+                "csum": true,
+                "ttl":
+                {
+                    "min": 0,
+                    "max": 0
+                },
+                "id":
+                {
+                    "min": 0,
+                    "max": 0
+                }
+            },
+            "udp":
+            {
+                "srcport": 0,
+                "dstport": 0
+            },
+            "tcp":
+            {
+                "srcport": 0,
+                "dstport": 0,
+                "syn": false,
+                "ack": false,
+                "psh": false,
+                "rst": false,
+                "fin": false,
+                "urg": false,
+                "ece": false,
+                "cwr": false,
+                "cooked": false,
+                "oneconnection": false
+            },
+            "icmp":
+            {
+                "code": 0,
+                "type": 0
+            },
+            "payloads":
             [
                 {
-                    "l4csum": true,
-                    "eth":
+                    "length":
                     {
-                        "smac": null,
-                        "dmac": null
+                        "min": 0,
+                        "max": 0
                     },
-                    "ip":
-                    {
-                        "ranges":
-                        [
-                            "172.16.0.0./16",
-                            "10.60.0.0/24",
-                            "192.168.30.0/24"
-                        ],
-                        "srcip": null,
-                        "dstip": null,
-                        "protocol": "udp",
-                        "tos": 0,
-                        "csum": true,
-                        "ttl":
-                        {
-                            "min": 0,
-                            "max": 0
-                        },
-                        "id":
-                        {
-                            "min": 0,
-                            "max": 0
-                        }
-                    },
-                    "udp": {
-                        "srcport": 0,
-                        "dstport": 0
-                    },
-                    "tcp": {
-                        "srcport": 0,
-                        "dstport": 0,
-                        "syn": false,
-                        "ack": false,
-                        "psh": false,
-                        "rst": false,
-                        "fin": false,
-                        "urg": false,
-                        "ece": false,
-                        "cwr": false,
-                        "cooked": false,
-                        "oneconnection": false
-                    },
-                    "icmp": {
-                        "code": 0,
-                        "type": 0
-                    },
-                    "payload": {
-                        "length": {
-                            "min": 0,
-                            "max": 0
-                        },
-                        "isfile": false,
-                        "isstring": false,
-                        "isstatic": false,
-                        "exact": null
-                    }
+                    "isfile": false,
+                    "isstring": false,
+                    "isstatic": false,
+                    "exact": null
                 }
             ]
-
         }
     ]
 }

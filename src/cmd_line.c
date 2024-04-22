@@ -151,80 +151,82 @@ void parse_cli(struct cmd_line *cmd, struct config *cfg)
         cfg->interface = cmd->cl_interface;
     }
 
-    cfg->seq[0].block = cmd->cl_block;
-    cfg->seq[0].max_count = cmd->cl_count;
-    cfg->seq[0].time = cmd->cl_time;
-    cfg->seq[0].delay = cmd->cl_delay;
-    cfg->seq[0].track_count = cmd->cl_track_count;
-    cfg->seq[0].max_data = cmd->cl_max_data;
-    cfg->seq[0].threads = cmd->cl_threads;
+    struct sequence *seq = &cfg->seq[0];
 
-    struct packet *pckt = &cfg->seq[0].pckts[0];
+    seq->block = cmd->cl_block;
+    seq->max_count = cmd->cl_count;
+    seq->time = cmd->cl_time;
+    seq->delay = cmd->cl_delay;
+    seq->track_count = cmd->cl_track_count;
+    seq->max_data = cmd->cl_max_data;
+    seq->threads = cmd->cl_threads;
 
-    pckt->l4_csum = cmd->cl_l4_csum;
+    seq->l4_csum = cmd->cl_l4_csum;
 
-    pckt->eth.src_mac = cmd->cl_src_mac;
-    pckt->eth.dst_mac = cmd->cl_dst_mac;
+    seq->eth.src_mac = cmd->cl_src_mac;
+    seq->eth.dst_mac = cmd->cl_dst_mac;
 
-    pckt->ip.min_ttl = cmd->cl_ttl_min;
-    pckt->ip.max_ttl = cmd->cl_ttl_max;
-    pckt->ip.min_id = cmd->cl_id_min;
-    pckt->ip.max_id = cmd->cl_id_max;
+    seq->ip.min_ttl = cmd->cl_ttl_min;
+    seq->ip.max_ttl = cmd->cl_ttl_max;
+    seq->ip.min_id = cmd->cl_id_min;
+    seq->ip.max_id = cmd->cl_id_max;
 
     if (cmd->cl_src_ip != NULL)
     {
         // Check for range.
         if (strstr(cmd->cl_src_ip, "/") != NULL)
         {
-            pckt->ip.src_ip = 0;
-            pckt->ip.range_count = 1;
-            pckt->ip.ranges[0] = cmd->cl_src_ip;
+            seq->ip.src_ip = 0;
+            seq->ip.range_count = 1;
+            seq->ip.ranges[0] = cmd->cl_src_ip;
         }
         else
         {
-            pckt->ip.src_ip = cmd->cl_src_ip;
+            seq->ip.src_ip = cmd->cl_src_ip;
         }
     }
 
     if (cmd->cl_dst_ip != NULL)
     {
-        pckt->ip.dst_ip = cmd->cl_dst_ip;
+        seq->ip.dst_ip = cmd->cl_dst_ip;
     }
 
-    pckt->ip.protocol = cmd->cl_protocol;
-    pckt->ip.tos = cmd->cl_tos;
-    pckt->ip.csum = cmd->cl_l3_csum;
+    seq->ip.protocol = cmd->cl_protocol;
+    seq->ip.tos = cmd->cl_tos;
+    seq->ip.csum = cmd->cl_l3_csum;
 
-    pckt->udp.src_port = cmd->cl_udp_src_port;
-    pckt->udp.dst_port = cmd->cl_udp_dst_port;
+    seq->udp.src_port = cmd->cl_udp_src_port;
+    seq->udp.dst_port = cmd->cl_udp_dst_port;
 
-    pckt->tcp.src_port = cmd->cl_tcp_src_port;
-    pckt->tcp.dst_port = cmd->cl_tcp_dst_port;
-    pckt->tcp.syn = cmd->cl_tcp_syn;
-    pckt->tcp.ack = cmd->cl_tcp_ack;
-    pckt->tcp.psh = cmd->cl_tcp_psh;
-    pckt->tcp.rst = cmd->cl_tcp_rst;
-    pckt->tcp.fin = cmd->cl_tcp_fin;
-    pckt->tcp.urg = cmd->cl_tcp_urg;
-    pckt->tcp.ece = cmd->cl_tcp_ece;
-    pckt->tcp.cwr = cmd->cl_tcp_cwr;
-    pckt->tcp.cooked = cmd->cl_tcp_cooked;
-    pckt->tcp.one_connection = cmd->cl_tcp_one_connection;
+    seq->tcp.cooked = cmd->cl_tcp_cooked;
+    seq->tcp.one_connection = cmd->cl_tcp_one_connection;
+    seq->tcp.src_port = cmd->cl_tcp_src_port;
+    seq->tcp.dst_port = cmd->cl_tcp_dst_port;
+    seq->tcp.syn = cmd->cl_tcp_syn;
+    seq->tcp.ack = cmd->cl_tcp_ack;
+    seq->tcp.psh = cmd->cl_tcp_psh;
+    seq->tcp.rst = cmd->cl_tcp_rst;
+    seq->tcp.fin = cmd->cl_tcp_fin;
+    seq->tcp.urg = cmd->cl_tcp_urg;
+    seq->tcp.ece = cmd->cl_tcp_ece;
+    seq->tcp.cwr = cmd->cl_tcp_cwr;
 
-    pckt->icmp.code = cmd->cl_icmp_code;
-    pckt->icmp.type = cmd->cl_icmp_type;
+    seq->icmp.code = cmd->cl_icmp_code;
+    seq->icmp.type = cmd->cl_icmp_type;
 
-    pckt->pl.min_len = cmd->cl_pl_min_len;
-    pckt->pl.max_len = cmd->cl_pl_max_len;
-    pckt->pl.is_static = cmd->cl_pl_is_static;
+    struct payload_opt *pl = &seq->pls[0];
+
+    pl->min_len = cmd->cl_pl_min_len;
+    pl->max_len = cmd->cl_pl_max_len;
+    pl->is_static = cmd->cl_pl_is_static;
 
     if (cmd->cl_pl_exact != NULL)
     {
-        pckt->pl.exact = cmd->cl_pl_exact;
+        pl->exact = cmd->cl_pl_exact;
     }
 
-    pckt->pl.is_file = cmd->cl_pl_is_file;
-    pckt->pl.is_string = cmd->cl_pl_is_string;
+    pl->is_file = cmd->cl_pl_is_file;
+    pl->is_string = cmd->cl_pl_is_string;
 }
 
 /**
