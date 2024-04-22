@@ -5,10 +5,10 @@
 This is a repository for [Packet Batch](https://github.com/Packet-Batch) that includes common files for all versions ([Standard](https://github.com/Packet-Batch/PB-Standard), [AF_XDP](https://github.com/Packet-Batch/PB-AF-XDP), and [The DPDK](https://github.com/Packet-Batch/PB-DPDK)). This includes source files to parse YAML config files, command line parsing, and other useful functions.
 
 ## Dependencies
-* [LibYAML](https://github.com/yaml/libyaml) - Used for parsing config files using the YAML syntax.
+* [JSON-C](https://github.com/json-c/json-c) - Used for parsing config files using the JSON syntax.
 
 ## Building And Installing
-While I suggest building and installing the application using the independent versions (standard, AF_XDP, or the DPDK), you may build and install this repository separately if you want as well. You may use `git` and `make`. When cloning the repository, you will want to use the `--recursive` flag to clone the needed submodule(s) as well (in this case, [libyaml](https://github.com/yaml/libyaml)). Otherwise, you will need to execute `git submodule update --init`.
+While I suggest building and installing the application using the independent versions (standard, AF_XDP, or the DPDK), you may build and install this repository separately if you want as well. You may use `git` and `make`. When cloning the repository, you will want to use the `--recursive` flag to clone the needed submodule(s) as well (in this case, [json-c](https://github.com/json-c/json-c)). Otherwise, you will need to execute `git submodule update --init`.
 
 The following should work.
 
@@ -16,8 +16,8 @@ The following should work.
 # Clone the Packet Batch Common repository.
 git clone --recursive https://github.com/Packet-Batch/PB-Common.git
 
-# Install build essentials/tools and needed libaries for LibYAML.
-sudo apt install build-essential clang autoconf libtool
+# Install build essentials/tools and needed libaries for JSON-C.
+sudo apt install -y cmake build-essential clang autoconf libtool pkgconf
 
 # Change current working directory to PB-Common/.
 cd PB-Common/
