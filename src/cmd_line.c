@@ -10,6 +10,9 @@ static struct option long_opts[] =
 {
     {"cfg", required_argument, NULL, 'c'},
     {"cli", no_argument, NULL, 'z'},
+    {"list", no_argument, NULL, 'l'},
+    {"verbose", no_argument, NULL, 'v'},
+    {"help", no_argument, NULL, 'h'},
 
     /* CLI options. */
     {"interface", required_argument, NULL, 0},
@@ -23,8 +26,8 @@ static struct option long_opts[] =
     {"threads", required_argument, NULL, 8},
     {"l4csum", required_argument, NULL, 9},
 
-    {"srcmac", required_argument, NULL, 10},
-    {"dstmac", required_argument, NULL, 11},
+    {"smac", required_argument, NULL, 10},
+    {"dmac", required_argument, NULL, 11},
 
     {"minttl", required_argument, NULL, 12},
     {"maxttl", required_argument, NULL, 13},
@@ -62,11 +65,74 @@ static struct option long_opts[] =
     {"pfile", required_argument, NULL, 36},
     {"pstring", required_argument, NULL, 37},
 
-    {"list", no_argument, NULL, 'l'},
-    {"verbose", no_argument, NULL, 'v'},
-    {"help", no_argument, NULL, 'h'},
     {NULL, 0, NULL, 0}
 };
+
+/**
+ * Prints the command line help menu.
+ * 
+ * @return void
+**/
+void print_cmd_help()
+{
+    fprintf(stdout, "Usage: pcktbatch -c <configfile> [-v -h ...]\n");
+
+    // Basic.
+    fprintf(stdout, "Basic\n");
+    fprintf(stdout, "\t-c --cfg => Path to config file.");
+    fprintf(stdout, "\t-l --list => Print full config values.\n");
+    fprintf(stdout, "\t-v --verbose => Provide verbose output on packets sent.\n");
+    fprintf(stdout, "\t-h --help => Print out the help menu and exit.\n");
+
+    // First sequence override.
+    fprintf(stdout, "First Sequence/Packet Override\n");
+    fprintf(stdout, "\t-z --cli => Enables the first sequence/packet override.\n\n");
+
+    fprintf(stdout, "\t--interface => The interface to send out of.");
+    fprintf(stdout, "\t--block => Whether to enable blocking mode (0/1).");
+    fprintf(stdout, "\t--count => The maximum amount of packets to send during this sequence before exiting.\n");
+    fprintf(stdout, "\t--delay => The delay in-between sending packets on each thread.\n");
+    fprintf(stdout, "\t--data => The maximum amount of data (in bytes) we can send during this sequence before exiting.\n");
+    fprintf(stdout, "\t--trackcount => Keep track of count regardless of it being 0 (read Configuration explanation for more information) (0/1).\n");
+    fprintf(stdout, "\t--threads => The amount of threads and sockets to spawn (0 = CPU count).\n");
+    fprintf(stdout, "\t--l4csum => Whether to calculate the layer-4 checksum (TCP, UDP, and ICMP) (0/1).\n\n");
+
+    fprintf(stdout, "\t--smac => The ethernet source MAC address to use.\n");
+    fprintf(stdout, "\t--dmac => The ethernet destination MAC address to use.\n\n");
+
+    fprintf(stdout, "\t--minttl => The minimum IP TTL to use.\n");
+    fprintf(stdout, "\t--maxttl => The maximum IP TTL to use.\n");
+    fprintf(stdout, "\t--minid => The minimum IP ID to use.\n");
+    fprintf(stdout, "\t--maxid => The maximum IP ID to use.\n");
+    fprintf(stdout, "\t--sip => The source IP (one range is supported in CIDR format).\n");
+    fprintf(stdout, "\t--dip => The destination IP.\n");
+    fprintf(stdout, "\t--protocol => The protocol to use (TCP, UDP, or ICMP).\n");
+    fprintf(stdout, "\t--tos => The IP TOS to use.\n");
+    fprintf(stdout, "\t--l3csum => Whether to calculate the IP header checksum or not (0/1).\n\n");
+
+    fprintf(stdout, "\t--usport => The UDP source port.\n");
+    fprintf(stdout, "\t--udport => The UDP destination port.\n\n");
+
+    fprintf(stdout, "\t--cooked => Use cooked TCP sockets which establishes a connection automatically.\n");
+    fprintf(stdout, "\t--oneconnection => Send packets over the same socket/connection instead of making a new connection for each packet.\n");
+    fprintf(stdout, "\t--tsport => The TCP source port.\n");
+    fprintf(stdout, "\t--tdport => The TCP source port.\n");
+    fprintf(stdout, "\t--syn => Set the TCP SYN flag (0/1).\n");
+    fprintf(stdout, "\t--ack => Set the TCP ACK flag (0/1).\n");
+    fprintf(stdout, "\t--psh => Set the TCP PSH flag (0/1).\n");
+    fprintf(stdout, "\t--rst => Set the TCP RST flag (0/1).\n");
+    fprintf(stdout, "\t--fin => Set the TCP FIN flag (0/1).\n");
+    fprintf(stdout, "\t--urg => Set the TCP URG flag (0/1).\n");
+    fprintf(stdout, "\t--ece => Set the TCP ECE flag (0/1).\n");
+    fprintf(stdout, "\t--cwr => Set the TCP CWR flag (0/1).\n\n");
+
+    fprintf(stdout, "\t--pmin => The minimum payload data.\n");
+    fprintf(stdout, "\t--pmax => The maximum payload data.\n");
+    fprintf(stdout, "\t--pstatic => Use static payload (0/1).\n");
+    fprintf(stdout, "\t--pexact => The exact payload string.\n");
+    fprintf(stdout, "\t--pfile => Whether to parse a file as the 'pexact' string instead.\n");
+    fprintf(stdout, "\t--pstring => Parse the 'pexact' string or file as a string instead of hexadecimal.\n");
+}
 
 /**
  * Parses CLI options if --cli is passed.

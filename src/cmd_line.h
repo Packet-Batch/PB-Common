@@ -62,5 +62,6 @@ struct cmd_line
     unsigned int cl_pl_is_string : 1;
 };
 
+void print_cmd_help();
 void parse_cmd_line(int argc, char *argv[], struct cmd_line *cmd);
 void parse_cli(struct cmd_line *cmd, struct config *cfg);
