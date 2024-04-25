@@ -75,7 +75,7 @@ char *lower_str(char *str)
  * 
  * @note Thanks for the help on https://stackoverflow.com/questions/64542446/choosing-a-random-ip-from-any-specific-cidr-range-in-c.
 **/
-char *rand_ip(char *range, __u16 *pckt_count)
+char *rand_ip(char *range, unsigned int seed)
 {
     // Split the <ip>/<cidr> and assign both values.
     char *split;
@@ -114,9 +114,6 @@ char *rand_ip(char *range, __u16 *pckt_count)
     free(str);
 
     __u8 cidr = (__u8) atoi(cidr_str);
-
-    // Randomize the rand_r() seed.
-    unsigned int seed = time(NULL) + (unsigned long)*pckt_count;
 
     // Create in_addr and convert the IP string to a 32-bit integer.
     struct in_addr in_addr;
