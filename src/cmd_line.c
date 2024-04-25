@@ -18,13 +18,15 @@ static struct option long_opts[] =
     {"interface", required_argument, NULL, 0},
     {"send", required_argument, NULL, 1},
     {"block", required_argument, NULL, 2},
-    {"count", required_argument, NULL, 3},
+    {"maxpckts", required_argument, NULL, 3},
     {"time", required_argument, NULL, 4},
     {"delay", required_argument, NULL, 5},
-    {"trackcount", required_argument, NULL, 6},
-    {"data", required_argument, NULL, 7},
+    {"track", required_argument, NULL, 6},
+    {"maxbytes", required_argument, NULL, 7},
     {"threads", required_argument, NULL, 8},
     {"l4csum", required_argument, NULL, 9},
+    {"pps", required_argument, NULL, 43},
+    {"bps", required_argument, NULL, 44},
 
     {"smac", required_argument, NULL, 10},
     {"dmac", required_argument, NULL, 11},
@@ -90,10 +92,10 @@ void print_cmd_help()
 
     fprintf(stdout, "\t--interface => The interface to send out of.");
     fprintf(stdout, "\t--block => Whether to enable blocking mode (0/1).");
-    fprintf(stdout, "\t--count => The maximum amount of packets to send during this sequence before exiting.\n");
+    fprintf(stdout, "\t--maxpckts => The maximum amount of packets to send during this sequence before exiting.\n");
+    fprintf(stdout, "\t--maxbytes => The maximum amount of bytes to send during this sequence before exiting.\n");
     fprintf(stdout, "\t--delay => The delay in-between sending packets on each thread.\n");
-    fprintf(stdout, "\t--data => The maximum amount of data (in bytes) we can send during this sequence before exiting.\n");
-    fprintf(stdout, "\t--trackcount => Keep track of count regardless of it being 0 (read Configuration explanation for more information) (0/1).\n");
+    fprintf(stdout, "\t--track => Track packet and byte statistics and print at the end (0/1). Will impact performance!\n");
     fprintf(stdout, "\t--threads => The amount of threads and sockets to spawn (0 = CPU count).\n");
     fprintf(stdout, "\t--l4csum => Whether to calculate the layer-4 checksum (TCP, UDP, and ICMP) (0/1).\n\n");
 
@@ -147,86 +149,88 @@ void parse_cli(struct cmd_line *cmd, struct config *cfg)
 {
     struct sequence *seq = &cfg->seq[0];
 
-    if (cmd->cl_interface != NULL)
+    if (cmd->interface != NULL)
     {
-        cfg->interface = cmd->cl_interface;
-        seq->interface = cmd->cl_interface;
+        cfg->interface = cmd->interface;
+        seq->interface = cmd->interface;
     }
 
-    seq->block = cmd->cl_block;
-    seq->max_count = cmd->cl_count;
-    seq->time = cmd->cl_time;
-    seq->delay = cmd->cl_delay;
-    seq->track_count = cmd->cl_track_count;
-    seq->max_data = cmd->cl_max_data;
-    seq->threads = cmd->cl_threads;
+    seq->block = cmd->block;
+    seq->track = cmd->track;
+    seq->max_pckts = cmd->max_pckts;
+    seq->max_bytes = cmd->max_bytes;
+    seq->pps = cmd->pps;
+    seq->bps = cmd->bps;
+    seq->time = cmd->time;
+    seq->delay = cmd->delay;
+    seq->threads = cmd->threads;
 
-    seq->l4_csum = cmd->cl_l4_csum;
+    seq->l4_csum = cmd->l4_csum;
 
-    seq->eth.src_mac = cmd->cl_src_mac;
-    seq->eth.dst_mac = cmd->cl_dst_mac;
+    seq->eth.src_mac = cmd->src_mac;
+    seq->eth.dst_mac = cmd->dst_mac;
 
-    seq->ip.min_ttl = cmd->cl_ttl_min;
-    seq->ip.max_ttl = cmd->cl_ttl_max;
-    seq->ip.min_id = cmd->cl_id_min;
-    seq->ip.max_id = cmd->cl_id_max;
+    seq->ip.min_ttl = cmd->ttl_min;
+    seq->ip.max_ttl = cmd->ttl_max;
+    seq->ip.min_id = cmd->id_min;
+    seq->ip.max_id = cmd->id_max;
 
-    if (cmd->cl_src_ip != NULL)
+    if (cmd->src_ip != NULL)
     {
         // Check for range.
-        if (strstr(cmd->cl_src_ip, "/") != NULL)
+        if (strstr(cmd->src_ip, "/") != NULL)
         {
             seq->ip.src_ip = 0;
             seq->ip.range_count = 1;
-            seq->ip.ranges[0] = cmd->cl_src_ip;
+            seq->ip.ranges[0] = cmd->src_ip;
         }
         else
         {
-            seq->ip.src_ip = cmd->cl_src_ip;
+            seq->ip.src_ip = cmd->src_ip;
         }
     }
 
-    if (cmd->cl_dst_ip != NULL)
+    if (cmd->dst_ip != NULL)
     {
-        seq->ip.dst_ip = cmd->cl_dst_ip;
+        seq->ip.dst_ip = cmd->dst_ip;
     }
 
-    seq->ip.protocol = cmd->cl_protocol;
-    seq->ip.tos = cmd->cl_tos;
-    seq->ip.csum = cmd->cl_l3_csum;
+    seq->ip.protocol = cmd->protocol;
+    seq->ip.tos = cmd->tos;
+    seq->ip.csum = cmd->l3_csum;
 
-    seq->udp.src_port = cmd->cl_udp_src_port;
-    seq->udp.dst_port = cmd->cl_udp_dst_port;
+    seq->udp.src_port = cmd->udp_src_port;
+    seq->udp.dst_port = cmd->udp_dst_port;
 
-    seq->tcp.cooked = cmd->cl_tcp_cooked;
-    seq->tcp.one_connection = cmd->cl_tcp_one_connection;
-    seq->tcp.src_port = cmd->cl_tcp_src_port;
-    seq->tcp.dst_port = cmd->cl_tcp_dst_port;
-    seq->tcp.syn = cmd->cl_tcp_syn;
-    seq->tcp.ack = cmd->cl_tcp_ack;
-    seq->tcp.psh = cmd->cl_tcp_psh;
-    seq->tcp.rst = cmd->cl_tcp_rst;
-    seq->tcp.fin = cmd->cl_tcp_fin;
-    seq->tcp.urg = cmd->cl_tcp_urg;
-    seq->tcp.ece = cmd->cl_tcp_ece;
-    seq->tcp.cwr = cmd->cl_tcp_cwr;
+    seq->tcp.cooked = cmd->tcp_cooked;
+    seq->tcp.one_connection = cmd->tcp_one_connection;
+    seq->tcp.src_port = cmd->tcp_src_port;
+    seq->tcp.dst_port = cmd->tcp_dst_port;
+    seq->tcp.syn = cmd->tcp_syn;
+    seq->tcp.ack = cmd->tcp_ack;
+    seq->tcp.psh = cmd->tcp_psh;
+    seq->tcp.rst = cmd->tcp_rst;
+    seq->tcp.fin = cmd->tcp_fin;
+    seq->tcp.urg = cmd->tcp_urg;
+    seq->tcp.ece = cmd->tcp_ece;
+    seq->tcp.cwr = cmd->tcp_cwr;
 
-    seq->icmp.code = cmd->cl_icmp_code;
-    seq->icmp.type = cmd->cl_icmp_type;
+    seq->icmp.code = cmd->icmp_code;
+    seq->icmp.type = cmd->icmp_type;
 
     struct payload_opt *pl = &seq->pls[0];
 
-    pl->min_len = cmd->cl_pl_min_len;
-    pl->max_len = cmd->cl_pl_max_len;
-    pl->is_static = cmd->cl_pl_is_static;
+    pl->min_len = cmd->pl_min_len;
+    pl->max_len = cmd->pl_max_len;
+    pl->is_static = cmd->pl_is_static;
 
-    if (cmd->cl_pl_exact != NULL)
+    if (cmd->pl_exact != NULL)
     {
-        pl->exact = cmd->cl_pl_exact;
+        pl->exact = cmd->pl_exact;
     }
 
-    pl->is_file = cmd->cl_pl_is_file;
-    pl->is_string = cmd->cl_pl_is_string;
+    pl->is_file = cmd->pl_is_file;
+    pl->is_string = cmd->pl_is_string;
 }
 
 /**
@@ -258,19 +262,19 @@ void parse_cmd_line(int argc, char **argv, struct cmd_line *cmd)
 
             /* CLI options. */
             case 0:
-                cmd->cl_interface = optarg;
+                cmd->interface = optarg;
 
                 break;
 
             case 2:
-                cmd->cl_block = atoi(optarg);
+                cmd->block = atoi(optarg);
 
                 break;
 
             case 3:
             {
                 char *val = strdup(optarg);
-                cmd->cl_count = strtoull((const char *)val, (char **)val, 0);
+                cmd->max_pckts = strtoull((const char *)val, (char **)val, 0);
 
                 break;
             }
@@ -278,7 +282,7 @@ void parse_cmd_line(int argc, char **argv, struct cmd_line *cmd)
             case 4:
             {
                 char *val = strdup(optarg);
-                cmd->cl_time = strtoull((const char *)val, (char **)val, 0);
+                cmd->time = strtoull((const char *)val, (char **)val, 0);
 
                 break;
             }
@@ -286,198 +290,214 @@ void parse_cmd_line(int argc, char **argv, struct cmd_line *cmd)
             case 5:
             {
                 char *val = strdup(optarg);
-                cmd->cl_delay = strtoull((const char *)val, (char **)val, 0);
+                cmd->delay = strtoull((const char *)val, (char **)val, 0);
 
                 break;
             }
 
             case 6:
-                cmd->cl_track_count = atoi(optarg);
+                cmd->track = atoi(optarg);
 
                 break;
 
             case 7:
             {
                 char *val = strdup(optarg);
-                cmd->cl_max_data = strtoull((const char *)val, (char **)val, 0);
+                cmd->max_bytes = strtoull((const char *)val, (char **)val, 0);
 
                 break;
             }
 
             case 8:
-                cmd->cl_threads = atoi(optarg);
+                cmd->threads = atoi(optarg);
 
                 break;
 
             case 9:
-                cmd->cl_l4_csum = atoi(optarg);
+                cmd->l4_csum = atoi(optarg);
 
                 break;
 
             case 10:
-                cmd->cl_src_mac = optarg;
+                cmd->src_mac = optarg;
 
                 break;
 
             case 11:
-                cmd->cl_dst_mac = optarg;
+                cmd->dst_mac = optarg;
 
                 break;
 
             case 12:
-                cmd->cl_ttl_min = atoi(optarg);
+                cmd->ttl_min = atoi(optarg);
 
                 break;
 
             case 13:
-                cmd->cl_ttl_max = atoi(optarg);
+                cmd->ttl_max = atoi(optarg);
 
                 break;
 
             case 14:
-                cmd->cl_id_min = atoi(optarg);
+                cmd->id_min = atoi(optarg);
 
                 break;
 
             case 15:
-                cmd->cl_id_max = atoi(optarg);
+                cmd->id_max = atoi(optarg);
 
                 break;
 
             case 16:
-                cmd->cl_src_ip = optarg;
+                cmd->src_ip = optarg;
 
                 break;
 
             case 17:
-                cmd->cl_dst_ip = optarg;
+                cmd->dst_ip = optarg;
 
                 break;
 
             case 18:
-                cmd->cl_protocol = optarg;
+                cmd->protocol = optarg;
 
                 break;
 
             case 19:
-                cmd->cl_tos = atoi(optarg);
+                cmd->tos = atoi(optarg);
 
                 break;
 
             case 20:
-                cmd->cl_l3_csum = atoi(optarg);
+                cmd->l3_csum = atoi(optarg);
 
                 break;
 
             case 21:
-                cmd->cl_udp_src_port = atoi(optarg);
+                cmd->udp_src_port = atoi(optarg);
 
                 break;
 
             case 22:
-                cmd->cl_udp_dst_port = atoi(optarg);
+                cmd->udp_dst_port = atoi(optarg);
 
                 break;
 
             case 23:
-                cmd->cl_tcp_src_port = atoi(optarg);
+                cmd->tcp_src_port = atoi(optarg);
 
                 break;
 
             case 24:
-                cmd->cl_tcp_dst_port = atoi(optarg);
+                cmd->tcp_dst_port = atoi(optarg);
 
                 break;
 
             case 25:
-                cmd->cl_tcp_syn = atoi(optarg);
+                cmd->tcp_syn = atoi(optarg);
 
                 break;
 
             case 26:
-                cmd->cl_tcp_ack = atoi(optarg);
+                cmd->tcp_ack = atoi(optarg);
 
                 break;
 
             case 27:
-                cmd->cl_tcp_psh = atoi(optarg);
+                cmd->tcp_psh = atoi(optarg);
 
                 break;
 
             case 28:
-                cmd->cl_tcp_rst = atoi(optarg);
+                cmd->tcp_rst = atoi(optarg);
 
                 break;
 
             case 29:
-                cmd->cl_tcp_fin = atoi(optarg);
+                cmd->tcp_fin = atoi(optarg);
 
                 break;
 
             case 30:
-                cmd->cl_tcp_urg = atoi(optarg);
+                cmd->tcp_urg = atoi(optarg);
 
                 break;
 
             case 31:
-                cmd->cl_tcp_cooked = atoi(optarg);
+                cmd->tcp_cooked = atoi(optarg);
 
                 break;
 
             case 32:
-                cmd->cl_pl_min_len = atoi(optarg);
+                cmd->pl_min_len = atoi(optarg);
 
                 break;
 
             case 33:
-                cmd->cl_pl_max_len = atoi(optarg);
+                cmd->pl_max_len = atoi(optarg);
 
                 break;
 
             case 34:
-                cmd->cl_pl_is_static = atoi(optarg);
+                cmd->pl_is_static = atoi(optarg);
 
                 break;
 
             case 35:
-                cmd->cl_pl_exact = optarg;
+                cmd->pl_exact = optarg;
 
                 break;
 
             case 36:
-                cmd->cl_pl_is_file = atoi(optarg);
+                cmd->pl_is_file = atoi(optarg);
 
                 break;
 
             case 37:
-                cmd->cl_pl_is_string = atoi(optarg);
+                cmd->pl_is_string = atoi(optarg);
 
                 break;
                 
             case 38:
-                cmd->cl_icmp_code = atoi(optarg);
+                cmd->icmp_code = atoi(optarg);
 
                 break;
                 
             case 39:
-                cmd->cl_icmp_type = atoi(optarg);
+                cmd->icmp_type = atoi(optarg);
 
                 break;
 
             case 40:
-                cmd->cl_tcp_one_connection = atoi(optarg);
+                cmd->tcp_one_connection = atoi(optarg);
 
                 break;
 
             case 41:
-                cmd->cl_tcp_ece = atoi(optarg);
+                cmd->tcp_ece = atoi(optarg);
 
                 break;
 
             case 42:
-                cmd->cl_tcp_cwr = atoi(optarg);
+                cmd->tcp_cwr = atoi(optarg);
 
                 break;
+
+            case 43:
+            {
+                char *val = strdup(optarg);
+                cmd->pps = strtoull((const char *)val, (char **)val, 0);
+
+                break;
+            }
+
+            case 44:
+            {
+                char *val = strdup(optarg);
+                cmd->bps = strtoull((const char *)val, (char **)val, 0);
+
+                break;
+            }
 
             case 'l':
                 cmd->list = 1;

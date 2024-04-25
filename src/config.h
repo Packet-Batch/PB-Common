@@ -86,15 +86,21 @@ struct sequence
 {
     // General options.
     char *interface;
+
     unsigned int block : 1;
-    __u64 max_count;
+    unsigned int track : 1;
+
+    __u64 max_pckts;
+    __u64 max_bytes;
+
+    __u64 pps;
+    __u64 bps;
+    
     __u64 time;
     __u64 delay;
-    __u64 max_data;
     __u16 threads;
     char *includes[MAX_INCLUDES];
     __u16 include_count;
-    unsigned int track_count : 1;
 
     // Ethernet options.
     struct eth_opt eth;

@@ -75,16 +75,28 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
                 seq->block = json_object_get_boolean(tmp_obj);
             }
 
-            // Retrieve max count.
-            if (json_object_object_get_ex(seq_obj, "count", &tmp_obj))
+            // Retrieve max packets.
+            if (json_object_object_get_ex(seq_obj, "maxpckts", &tmp_obj))
             {
-                seq->max_count = json_object_get_uint64(tmp_obj);
+                seq->max_pckts = json_object_get_uint64(tmp_obj);
             }
 
-            // Retrieve max data.
-            if (json_object_object_get_ex(seq_obj, "data", &tmp_obj))
+            // Retrieve max bytes.
+            if (json_object_object_get_ex(seq_obj, "maxbytes", &tmp_obj))
             {
-                seq->max_data = json_object_get_uint64(tmp_obj);
+                seq->max_bytes = json_object_get_uint64(tmp_obj);
+            }
+
+            // Retrieve packets per second rate.
+            if (json_object_object_get_ex(seq_obj, "pps", &tmp_obj))
+            {
+                seq->pps = json_object_get_uint64(tmp_obj);
+            }
+
+            // Retrieve bytes per second rate.
+            if (json_object_object_get_ex(seq_obj, "bps", &tmp_obj))
+            {
+                seq->bps = json_object_get_uint64(tmp_obj);
             }
 
             // Retrieve time
@@ -105,10 +117,10 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
                 seq->delay = json_object_get_uint64(tmp_obj);
             }
 
-            // Retrieve track count.
-            if (json_object_object_get_ex(seq_obj, "trackcount", &tmp_obj))
+            // Retrieve tracking.
+            if (json_object_object_get_ex(seq_obj, "track", &tmp_obj))
             {
-                seq->track_count = json_object_get_boolean(tmp_obj);
+                seq->track = json_object_get_boolean(tmp_obj);
             }
 
             // Retrieve layer-4 checksum.
@@ -424,7 +436,11 @@ void clear_sequence(struct config *cfg, int seq_num)
 
     seq->interface = NULL;
     seq->block = 1;
-    seq->max_count = 0;
+    seq->track = 0;
+    seq->max_pckts = 0;
+    seq->max_bytes = 0;
+    seq->pps = 0;
+    seq->bps = 0;
     seq->threads = 0;
     seq->time = 0;
     seq->delay = 1000000;
@@ -523,12 +539,15 @@ void print_config(struct config *cfg, int seq_cnt)
 
 
         fprintf(stdout, "\t\tInterface Override => %s\n", seq->interface ? seq->interface : "N/A");
-        fprintf(stdout, "\t\tBlock => %s\n", seq->block ? "True" : "False");
-        fprintf(stdout, "\t\tCount => %llu\n", seq->max_count);
+        fprintf(stdout, "\t\tBlock => %s\n", seq->block ? "Yes" : "No");
+        fprintf(stdout, "\t\tTrack => %s\n", seq->track ? "Yes": "No");
+        fprintf(stdout, "\t\tMax Packets => %llu\n", seq->max_pckts);
+        fprintf(stdout, "\t\tMax Bytes => %llu.\n", seq->max_bytes);
+        fprintf(stdout, "\t\tPackets Per Second => %llu.\n", seq->pps);
+        fprintf(stdout, "\t\tBytes Per Second => %llu\n", seq->bps);
         fprintf(stdout, "\t\tTime => %llu\n", seq->time);
         fprintf(stdout, "\t\tDelay => %llu\n", seq->delay);
         fprintf(stdout, "\t\tThreads => %u\n", seq->threads);
-
 
         // Ethernet settings.
         fprintf(stdout, "\t\tEthernet\n");
