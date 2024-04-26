@@ -95,8 +95,8 @@ void print_cmd_help()
     fprintf(stdout, "\t--track => Track packet and byte statistics and print at the end (0/1). Will impact performance!\n");
     fprintf(stdout, "\t--maxpckts => The maximum amount of packets to send during this sequence before exiting.\n");
     fprintf(stdout, "\t--maxbytes => The maximum amount of bytes to send during this sequence before exiting.\n");
-    fprintf(stdout, "\t\t--pps => The amount of packets per second to limit this sequence to (0 = disabled).\n");
-    fprintf(stdout, "\t\t--bps => The amount of bytes per second to limit this sequence to (0 = disabled)\n");
+    fprintf(stdout, "\t--pps => The amount of packets per second to limit this sequence to (0 = disabled).\n");
+    fprintf(stdout, "\t--bps => The amount of bytes per second to limit this sequence to (0 = disabled)\n");
     fprintf(stdout, "\t--delay => The delay in-between sending packets on each thread.\n");
     fprintf(stdout, "\t--threads => The amount of threads and sockets to spawn (0 = CPU count).\n");
     fprintf(stdout, "\t--l4csum => Whether to calculate the layer-4 checksum (TCP, UDP, and ICMP) (0/1).\n\n");
