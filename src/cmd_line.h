@@ -1,6 +1,6 @@
 #pragma once
 
-#include <linux/types.h>
+#include "simple_types.h"
 #include "config.h"
 
 typedef struct cmd_line
@@ -24,25 +24,25 @@ typedef struct cmd_line
     unsigned int l4_csum : 1;
     unsigned int is_l4_csum : 1;
 
-    __u64 max_pckts;
+    u64 max_pckts;
     unsigned int is_max_pckts : 1;
 
-    __u64 max_bytes;
+    u64 max_bytes;
     unsigned int is_max_bytes : 1;
 
-    __u64 pps;
+    u64 pps;
     unsigned int is_pps : 1;
 
-    __u64 bps;
+    u64 bps;
     unsigned int is_bps : 1;
 
-    __u64 time;
+    u64 time;
     unsigned int is_time : 1;
 
-    __u64 delay;
+    u64 delay;
     unsigned int is_delay : 1;
     
-    __u16 threads;
+    u16 threads;
     unsigned int is_threads : 1;
     
     char *src_mac;
@@ -51,16 +51,16 @@ typedef struct cmd_line
     char *dst_mac;
     unsigned int is_dst_mac : 1;
 
-    __u16 ttl_min;
+    u16 ttl_min;
     unsigned int is_ttl_min : 1;
 
-    __u16 ttl_max;
+    u16 ttl_max;
     unsigned int is_ttl_max : 1;
 
-    __u16 id_min;
+    u16 id_min;
     unsigned int is_id_min : 1;
     
-    __u16 id_max;
+    u16 id_max;
     unsigned int is_id_max : 1;
 
     char *src_ip;
@@ -72,22 +72,22 @@ typedef struct cmd_line
     char *protocol;
     unsigned int is_protocol : 1;
 
-    __u8 tos;
+    u8 tos;
     unsigned int is_tos : 1;
 
     unsigned int l3_csum : 1;
     unsigned int is_l3_csum : 1;
 
-    __u16 udp_src_port;
+    u16 udp_src_port;
     unsigned int is_udp_src_port : 1;
 
-    __u16 udp_dst_port;
+    u16 udp_dst_port;
     unsigned int is_udp_dst_port : 1;
 
-    __u16 tcp_src_port;
+    u16 tcp_src_port;
     unsigned int is_tcp_src_port : 1;
 
-    __u16 tcp_dst_port;
+    u16 tcp_dst_port;
     unsigned int is_tcp_dst_port : 1;
 
     unsigned int tcp_syn : 1;
@@ -120,16 +120,16 @@ typedef struct cmd_line
     unsigned int tcp_one_connection : 1;
     unsigned int is_tcp_one_connection : 1;
 
-    __u8 icmp_code : 1;
+    u8 icmp_code : 1;
     unsigned int is_icmp_code : 1;
 
-    __u8 icmp_type : 1;
+    u8 icmp_type : 1;
     unsigned int is_icmp_type : 1;
 
-    __u16 pl_min_len;
+    u16 pl_min_len;
     unsigned int is_pl_min_len : 1;
 
-    __u16 pl_max_len;
+    u16 pl_max_len;
     unsigned int is_pl_max_len : 1;
 
     unsigned int pl_is_static : 1;

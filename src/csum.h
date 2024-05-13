@@ -10,7 +10,7 @@
 
 #ifndef __BPF__
 
-#include <linux/types.h>
+#include "simple_types.h"
 
 #ifndef unlikely
 #define unlikely(x) __builtin_expect(!!(x), 0)
@@ -165,7 +165,7 @@ static unsigned do_csum(const unsigned char *buff, unsigned len)
 static inline __wsum csum_partial(const void *buff, int len, __wsum sum)
 {
 	return (__wsum)add32_with_carry(do_csum((const unsigned char *)buff, len),
-						(__u32)sum);
+						(u32)sum);
 }
 
 /**
@@ -181,9 +181,9 @@ static inline __sum16 csum_fold(__wsum sum)
 	asm("  addl %1,%0\n"
 	    "  adcl $0xffff,%0"
 	    : "=r" (sum)
-	    : "r" ((__u32)sum << 16),
-	      "0" ((__u32)sum & 0xffff0000));
-	return (__sum16)(~(__u32)sum >> 16);
+	    : "r" ((u32)sum << 16),
+	      "0" ((u32)sum & 0xffff0000));
+	return (__sum16)(~(u32)sum >> 16);
 }
 
 
@@ -243,8 +243,8 @@ static inline __sum16 ip_fast_csum(const void *iph, unsigned int ihl)
  * 32bit unfolded.
  */
 static inline __wsum
-csum_tcpudp_nofold(__be32 saddr, __be32 daddr, __u32 len,
-		   __u8 proto, __wsum sum)
+csum_tcpudp_nofold(__be32 saddr, __be32 daddr, u32 len,
+		   u8 proto, __wsum sum)
 {
 	asm("  addl %1, %0\n"
 	    "  adcl %2, %0\n"
@@ -269,7 +269,7 @@ csum_tcpudp_nofold(__be32 saddr, __be32 daddr, __u32 len,
  * complemented and ready to be filled in.
  */
 static inline __sum16 csum_tcpudp_magic(__be32 saddr, __be32 daddr,
-					__u32 len, __u8 proto,
+					u32 len, u8 proto,
 					__wsum sum)
 {
 	return csum_fold(csum_tcpudp_nofold(saddr, daddr, len, proto, sum));
@@ -277,20 +277,20 @@ static inline __sum16 csum_tcpudp_magic(__be32 saddr, __be32 daddr,
 
 #endif
 
-static __always_inline __u16 csum_fold_helper(__u32 csum) {
-    __u32 r = csum << 16 | csum >> 16;
+static __always_inline u16 csum_fold_helper(u32 csum) {
+    u32 r = csum << 16 | csum >> 16;
     csum = ~csum;
     csum -= r;
-    return (__u16)(csum >> 16);
+    return (u16)(csum >> 16);
 }
 
-static __always_inline __u32 csum_add(__u32 addend, __u32 csum) {
-    __u32 res = csum;
+static __always_inline u32 csum_add(u32 addend, u32 csum) {
+    u32 res = csum;
     res += addend;
     return (res + (res < addend));
 }
 
-static __always_inline __u32 csum_sub(__u32 addend, __u32 csum) {
+static __always_inline u32 csum_sub(u32 addend, u32 csum) {
     return csum_add(csum, ~addend);
 }
 
@@ -300,11 +300,11 @@ static __always_inline void update_iph_checksum(struct iphdr *iph) {
 	iph->check = 0;
 	iph->check = ip_fast_csum((unsigned char *)iph, iph->ihl);
 #else
-    __u16 *next_iph_u16 = (__u16 *)iph;
-    __u32 csum = 0;
+    u16 *next_iph_u16 = (u16 *)iph;
+    u32 csum = 0;
     iph->check = 0;
 #pragma clang loop unroll(full)
-    for (__u32 i = 0; i < sizeof(*iph) >> 1; i++) {
+    for (u32 i = 0; i < sizeof(*iph) >> 1; i++) {
         csum += *next_iph_u16++;
     }
 
@@ -312,15 +312,15 @@ static __always_inline void update_iph_checksum(struct iphdr *iph) {
 #endif
 }
 
-static __always_inline __u16 csum_diff4(__u32 from, __u32 to, __u16 csum) {
-    __u32 tmp = csum_sub(from, ~((__u32)csum));
+static __always_inline u16 csum_diff4(u32 from, u32 to, u16 csum) {
+    u32 tmp = csum_sub(from, ~((u32)csum));
     return csum_fold_helper(csum_add(to, tmp));
 }
 
-__u16 tcp_checksum(const void *buff, size_t len, __u32 *src_addr, __u32 *dest_addr)
+u16 tcp_checksum(const void *buff, size_t len, u32 *src_addr, u32 *dest_addr)
 {
-    const __u16 *buf=buff;
-    __u32 sum;
+    const u16 *buf=buff;
+    u32 sum;
     size_t length=len;
 
     // Calculate the sum                                            //
@@ -335,7 +335,7 @@ __u16 tcp_checksum(const void *buff, size_t len, __u32 *src_addr, __u32 *dest_ad
 
     if ( len & 1 )
     // Add the padding if the packet lenght is odd          //
-    sum += *((__u8 *)buf);
+    sum += *((u8 *)buf);
 
     // Add the pseudo-header                                        //
     sum += *(src_addr++);
@@ -350,14 +350,14 @@ __u16 tcp_checksum(const void *buff, size_t len, __u32 *src_addr, __u32 *dest_ad
         sum = (sum & 0xFFFF) + (sum >> 16);
 
     // Return the one's complement of sum                           //
-    return ( (__u16)(~sum)  );
+    return ( (u16)(~sum)  );
 }
 
-__u16 icmp_csum (__u16 *addr, int len)
+u16 icmp_csum (u16 *addr, int len)
 {
 	int count = len;
-	register __u32 sum = 0;
-	__u16 answer = 0;
+	register u32 sum = 0;
+	u16 answer = 0;
 
 	// Sum up 2-byte values until none or only one byte left.
 	while (count > 1) 
@@ -369,7 +369,7 @@ __u16 icmp_csum (__u16 *addr, int len)
 	// Add left-over byte, if any.
 	if (count > 0) 
 	{
-		sum += *(__u8 *) addr;
+		sum += *(u8 *) addr;
 	}
 
 	// Fold 32-bit sum into 16 bits; we lose information by doing this,

@@ -19,7 +19,7 @@
  * 
  * @return Returns 0 on success and -1 on failure.
 **/
-int parse_config(const char file_name[], config_t *cfg, int only_seq, int *seq_num, __u8 log)
+int parse_config(const char file_name[], config_t *cfg, int only_seq, int *seq_num, u8 log)
 {    
     // Attempt to open config file with JSON.
     json_object *root = json_object_from_file(file_name);

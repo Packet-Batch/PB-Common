@@ -3,18 +3,19 @@
 #include <ctype.h>
 #include <time.h>
 #include <string.h>
-#include <linux/types.h>
 
 #include <arpa/inet.h>
 
+#include "simple_types.h"
+
 /**
- * Retrieves the Ethernet MAC of the host's default gateway and stores it in `mac` (__u8 *).
+ * Retrieves the Ethernet MAC of the host's default gateway and stores it in `mac` (u8 *).
  * 
- * @param mac The variable to store the MAC address in. Must be an __u8 * array with the length of ETH_ALEN (6).
+ * @param mac The variable to store the MAC address in. Must be an u8 * array with the length of ETH_ALEN (6).
  * 
  * @return Void
 **/
-void get_gw_mac(__u8 *mac)
+void get_gw_mac(u8 *mac)
 {
     char cmd[] = "ip neigh | grep \"$(ip -4 route list 0/0|cut -d' ' -f3) \"|cut -d' ' -f5|tr '[a-f]' '[A-F]'";
 
@@ -40,11 +41,11 @@ void get_gw_mac(__u8 *mac)
  * @param max The maximum number to choose from.
  * @param seed The seed to pass to the rand_r() function.
  * 
- * @return A 16-bit integer (__u16).
+ * @return A 16-bit integer (u16).
  * 
- * @note If you're trying to return an integer within the 8-bit range, I'd recommend casting as __u8 or similar.
+ * @note If you're trying to return an integer within the 8-bit range, I'd recommend casting as u8 or similar.
 **/
-__u16 rand_num(__u16 min, __u16 max, unsigned int seed)
+u16 rand_num(u16 min, u16 max, unsigned int seed)
 {
     return (rand_r(&seed) % (max - min + 1)) + min;
 }
@@ -113,21 +114,21 @@ char *rand_ip(char *range, unsigned int seed)
     // Free the temporary string (str).
     free(str);
 
-    __u8 cidr = (__u8) atoi(cidr_str);
+    u8 cidr = (u8) atoi(cidr_str);
 
     // Create in_addr and convert the IP string to a 32-bit integer.
     struct in_addr in_addr;
     inet_aton(s_ip, &in_addr);
-    __u32 ip_addr = ntohl(in_addr.s_addr);
+    u32 ip_addr = ntohl(in_addr.s_addr);
 
     // Get the mask (the complement of 2 to the power of the CIDR minus one).
-    __u32 mask = (1 << (32 - cidr)) - 1;
+    u32 mask = (1 << (32 - cidr)) - 1;
 
     // Generate a random number using rand_r(&seed).
-    __u32 rand_num = rand_r(&seed);
+    u32 rand_num = rand_r(&seed);
 
     // Generate new 32-bit IPv4 address from IP/CIDR range above.
-    __u32 rand_ip = (ip_addr & ~mask) | (mask & rand_num);
+    u32 rand_ip = (ip_addr & ~mask) | (mask & rand_num);
 
     // Convert the new IP to a string and print it.
     struct in_addr rand_ip_str;
@@ -147,11 +148,11 @@ char *rand_ip(char *range, unsigned int seed)
  * Retrieves the source MAC address of an interface.
  * 
  * @param dev The interface/device name.
- * @param src_mac A pointer to the source MAC address (__u8).
+ * @param src_mac A pointer to the source MAC address (u8).
  * 
  * @return 0 on success or -1 on failure (path not found).
 **/
-int get_src_mac_address(const char *dev, __u8 *src_mac)
+int get_src_mac_address(const char *dev, u8 *src_mac)
 {
     // Format path to source MAC on file system using network class.
     char path[255];
