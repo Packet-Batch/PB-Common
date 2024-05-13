@@ -19,7 +19,7 @@
  * 
  * @return Returns 0 on success and -1 on failure.
 **/
-int parse_config(const char file_name[], struct config *cfg, int only_seq, int *seq_num, __u8 log)
+int parse_config(const char file_name[], config_t *cfg, int only_seq, int *seq_num, __u8 log)
 {    
     // Attempt to open config file with JSON.
     json_object *root = json_object_from_file(file_name);
@@ -40,7 +40,7 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
     }
 
     // Parse sequences array.
-    struct json_object *j_sequences;
+    json_object *j_sequences;
 
     if (!json_object_object_get_ex(root, "sequences", &j_sequences))
     {
@@ -58,7 +58,7 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
         for (int i = 0; i < seq_len; i++)
         {
             // Retrieve current sequence.
-            struct sequence *seq = &cfg->seq[i];
+            sequence_t *seq = &cfg->seq[i];
 
             // Get sequence JSON object.
             json_object *seq_obj = json_object_array_get_idx(j_sequences, i);
@@ -130,7 +130,7 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
             }
 
             // Retrieve ethernet object.
-            struct json_object *eth_obj;
+            json_object *eth_obj;
 
             if (json_object_object_get_ex(seq_obj, "eth", &eth_obj))
             {
@@ -148,7 +148,7 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
             }
 
             // Retrieve IP object.
-            struct json_object *ip_obj;
+            json_object *ip_obj;
 
             if (json_object_object_get_ex(seq_obj, "ip", &ip_obj))
             {
@@ -183,7 +183,7 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
                 }
 
                 // TTL object.
-                struct json_object *ttl_obj;
+                json_object *ttl_obj;
 
                 if (json_object_object_get_ex(ip_obj, "ttl", &ttl_obj))
                 {
@@ -201,7 +201,7 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
                 }
 
                 // ID object.
-                struct json_object *id_obj;
+                json_object *id_obj;
 
                 if (json_object_object_get_ex(ip_obj, "id", &id_obj))
                 {
@@ -219,7 +219,7 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
                 }
 
                 // Ranges array.
-                struct json_object *ranges_obj;
+                json_object *ranges_obj;
 
                 if (json_object_object_get_ex(ip_obj, "ranges", &ranges_obj))
                 {
@@ -230,7 +230,7 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
                         for (int j = 0; j < ranges_len; j++)
                         {
                             // Retrieve specific range and add to ranges array.
-                            struct json_object *range_obj = json_object_array_get_idx(ranges_obj, j);
+                            json_object *range_obj = json_object_array_get_idx(ranges_obj, j);
 
                             seq->ip.ranges[j] = (char *) json_object_get_string(range_obj);
                             seq->ip.range_count++;
@@ -240,7 +240,7 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
             }
 
             // UDP object.
-            struct json_object *udp_obj;
+            json_object *udp_obj;
 
             if (json_object_object_get_ex(seq_obj, "udp", &udp_obj))
             {
@@ -258,7 +258,7 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
             }
 
             // TCP object.
-            struct json_object *tcp_obj;
+            json_object *tcp_obj;
 
             if (json_object_object_get_ex(seq_obj, "tcp", &tcp_obj))
             {
@@ -336,7 +336,7 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
             }
 
             // ICMP object.
-            struct json_object *icmp_obj;
+            json_object *icmp_obj;
 
             if (json_object_object_get_ex(seq_obj, "icmp", &icmp_obj))
             {
@@ -354,7 +354,7 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
             }
 
             // Payloads object.
-            struct json_object *pls_obj;
+            json_object *pls_obj;
 
             if (json_object_object_get_ex(seq_obj, "payloads", &pls_obj))
             {
@@ -364,9 +364,9 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
                 {
                     for (int j = 0; j < pls_len; j++)
                     {
-                        struct json_object *pl_obj = json_object_array_get_idx(pls_obj, j);
+                        json_object *pl_obj = json_object_array_get_idx(pls_obj, j);
 
-                        struct payload_opt *pl = &seq->pls[j];
+                        payload_opt_t *pl = &seq->pls[j];
 
                         // Is static.
                         if (json_object_object_get_ex(pl_obj, "isstatic", &tmp_obj))
@@ -393,7 +393,7 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
                         }
 
                         // Length object.
-                        struct json_object *len_obj;
+                        json_object *len_obj;
 
                         if (json_object_object_get_ex(pl_obj, "length", &len_obj))
                         {
@@ -430,9 +430,9 @@ int parse_config(const char file_name[], struct config *cfg, int only_seq, int *
  * 
  * @return Void
 **/
-void clear_sequence(struct config *cfg, int seq_num)
+void clear_sequence(config_t *cfg, int seq_num)
 {
-    struct sequence *seq = &cfg->seq[seq_num];
+    sequence_t *seq = &cfg->seq[seq_num];
 
     seq->interface = NULL;
     seq->block = 1;
@@ -489,7 +489,7 @@ void clear_sequence(struct config *cfg, int seq_num)
 
     // Reset payloads.
     for (int i = 0; i < MAX_PAYLOADS; i++) {
-        struct payload_opt *pl = &seq->pls[i];
+        payload_opt_t *pl = &seq->pls[i];
 
         pl->exact = NULL;
         pl->is_file = 0;
@@ -508,7 +508,7 @@ void clear_sequence(struct config *cfg, int seq_num)
  * 
  * @return Void
 **/
-void print_config(struct config *cfg, int seq_cnt)
+void print_config(config_t *cfg, int seq_cnt)
 {
     fprintf(stdout, "Found %d sequences.\n", seq_cnt);
 
@@ -518,7 +518,7 @@ void print_config(struct config *cfg, int seq_cnt)
 
     for (int i = 0; i < seq_cnt; i++)
     {
-        struct sequence *seq = &cfg->seq[i];
+        sequence_t *seq = &cfg->seq[i];
 
         if (!seq)
             continue;
@@ -613,7 +613,7 @@ void print_config(struct config *cfg, int seq_cnt)
 
             for (int j = 0; j < seq->pl_cnt; j++)
             {
-                struct payload_opt *pl = &seq->pls[j];
+                payload_opt_t *pl = &seq->pls[j];
 
                 fprintf(stdout, "\t\t\t#%d\n", j + 1);
 

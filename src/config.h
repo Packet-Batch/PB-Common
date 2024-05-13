@@ -9,13 +9,13 @@
 
 #define MAX_PAYLOADS 256
 
-struct eth_opt
+typedef struct eth_opt
 {
     char *src_mac;
     char *dst_mac;
-};
+} eth_opt_t;
 
-struct ip_opt
+typedef struct ip_opt
 {
     // Protocol (Required).
     char *protocol;
@@ -39,9 +39,9 @@ struct ip_opt
 
     // Do checksum.
     unsigned int csum : 1;
-};
+} ip_opt_t;
 
-struct tcp_opt
+typedef struct tcp_opt
 {
     __u16 src_port;
     __u16 dst_port;
@@ -58,21 +58,21 @@ struct tcp_opt
 
     unsigned int cooked : 1;
     unsigned int one_connection : 1;
-};
+} tcp_opt_t;
 
-struct udp_opt
+typedef struct udp_opt
 {
     __u16 src_port;
     __u16 dst_port;
-};
+} udp_opt_t;
 
-struct icmp_opt
+typedef struct icmp_opt
 {
     __u8 code;
     __u8 type;
-};
+} icmp_opt_t;
 
-struct payload_opt
+typedef struct payload_opt
 {
     __u16 min_len;
     __u16 max_len;
@@ -80,9 +80,9 @@ struct payload_opt
     unsigned int is_file : 1;
     unsigned int is_string : 1;
     char *exact;
-};
+} payload_opt_t;
 
-struct sequence
+typedef struct sequence
 {
     // General options.
     char *interface;
@@ -103,29 +103,29 @@ struct sequence
     __u16 include_count;
 
     // Ethernet options.
-    struct eth_opt eth;
+    eth_opt_t eth;
 
     // IP options.
-    struct ip_opt ip;
+    ip_opt_t ip;
 
     // Layer 4 options.
-    struct tcp_opt tcp;
-    struct udp_opt udp;
-    struct icmp_opt icmp;
+    tcp_opt_t tcp;
+    udp_opt_t udp;
+    icmp_opt_t icmp;
     unsigned int l4_csum : 1;
 
     // Payload options.
     int pl_cnt;
-    struct payload_opt pls[MAX_PAYLOADS];
-};
+    payload_opt_t pls[MAX_PAYLOADS];
+} sequence_t;
 
-struct config
+typedef struct config
 {
     // Device options.
     char *interface;
 
-    struct sequence seq[MAX_SEQUENCES];
-};
+    sequence_t seq[MAX_SEQUENCES];
+} config_t;
 
 int parse_config(const char file_name[], struct config *cfg, int only_seq, int *seq_num, __u8 log);
 void clear_sequence(struct config *cfg, int seq_num);

@@ -147,9 +147,9 @@ void print_cmd_help()
  * 
  * @return void
 **/
-void parse_cli(struct cmd_line *cmd, struct config *cfg)
+void parse_cli(cmd_line_t *cmd, config_t *cfg)
 {
-    struct sequence *seq = &cfg->seq[0];
+    sequence_t *seq = &cfg->seq[0];
 
     if (cmd->interface != NULL && cmd->is_interface)
     {
@@ -394,7 +394,7 @@ void parse_cli(struct cmd_line *cmd, struct config *cfg)
  * 
  * @return void
 **/
-void parse_cmd_line(int argc, char **argv, struct cmd_line *cmd)
+void parse_cmd_line(int argc, char **argv, cmd_line_t *cmd)
 {
     int c = -1;
 

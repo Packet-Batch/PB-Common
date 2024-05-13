@@ -3,7 +3,7 @@
 #include <linux/types.h>
 #include "config.h"
 
-struct cmd_line
+typedef struct cmd_line
 {
     const char *config;
     unsigned int list : 1;
@@ -143,7 +143,7 @@ struct cmd_line
 
     unsigned int pl_is_string : 1;
     unsigned int is_pl_is_string : 1;
-};
+} cmd_line_t;
 
 void print_cmd_help();
 void parse_cmd_line(int argc, char *argv[], struct cmd_line *cmd);
