@@ -352,36 +352,41 @@ void parse_cli(cmd_line_t *cmd, config_t *cfg)
         seq->icmp.type = cmd->icmp_type;
     }
 
-    struct payload_opt *pl = &seq->pls[0];
-
-    if(cmd->is_pl_min_len)
+    if (cmd->is_pl_min_len || cmd->is_pl_max_len || cmd->is_pl_exact)
     {
-        pl->min_len = cmd->pl_min_len;
-    }
+        seq->pl_cnt = 1;
+        
+        struct payload_opt *pl = &seq->pls[0];
 
-    if(cmd->is_pl_max_len)
-    {
-        pl->max_len = cmd->pl_max_len;
-    }
+        if(cmd->is_pl_min_len)
+        {
+            pl->min_len = cmd->pl_min_len;
+        }
 
-    if(cmd->is_pl_is_static)
-    {
-        pl->is_static = cmd->pl_is_static;
-    }
+        if(cmd->is_pl_max_len)
+        {
+            pl->max_len = cmd->pl_max_len;
+        }
 
-    if (cmd->pl_exact != NULL && cmd->is_pl_exact)
-    {
-        pl->exact = cmd->pl_exact;
-    }
+        if(cmd->is_pl_is_static)
+        {
+            pl->is_static = cmd->pl_is_static;
+        }
 
-    if(cmd->is_pl_is_file)
-    {
-        pl->is_file = cmd->pl_is_file;
-    }
+        if (cmd->pl_exact != NULL && cmd->is_pl_exact)
+        {
+            pl->exact = cmd->pl_exact;
+        }
 
-    if(cmd->is_pl_is_string)
-    {
-        pl->is_string = cmd->pl_is_string;
+        if(cmd->is_pl_is_file)
+        {
+            pl->is_file = cmd->pl_is_file;
+        }
+
+        if(cmd->is_pl_is_string)
+        {
+            pl->is_string = cmd->pl_is_string;
+        }
     }
 }
 
