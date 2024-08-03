@@ -2,7 +2,7 @@
 [![Packet Batch Common Build Workflow](https://github.com/Packet-Batch/PB-Common/actions/workflows/build.yml/badge.svg)](https://github.com/Packet-Batch/PB-Common/actions/workflows/build.yml)
 
 ## Description
-This is a repository for [Packet Batch](https://github.com/Packet-Batch) that includes common files for all versions ([Standard](https://github.com/Packet-Batch/PB-Standard), [AF_XDP](https://github.com/Packet-Batch/PB-AF-XDP), and [The DPDK](https://github.com/Packet-Batch/PB-DPDK)). This includes source files to parse YAML config files, command line parsing, and other useful functions.
+This is a repository for [Packet Batch](https://github.com/Packet-Batch) that includes common files for all versions ([Standard](https://github.com/Packet-Batch/PB-Standard), [AF_XDP](https://github.com/Packet-Batch/PB-AF-XDP), and [The DPDK](https://github.com/Packet-Batch/PB-DPDK)). This includes source files to parse JSON config files, command line parsing, and other useful functions.
 
 ## Dependencies
 * [JSON-C](https://github.com/json-c/json-c) - Used for parsing config files using the JSON syntax.
